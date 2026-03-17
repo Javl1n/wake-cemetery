@@ -13,8 +13,8 @@ const PatternPlaceholder = () => {
             <h1 className="mb-6 text-4xl font-medium tracking-tight text-pretty text-foreground md:text-5xl lg:text-6xl">
               <TextType
                 text={["Welcome Customer",
-                     "Honoring Lives with Dignity, Compassion, and Care",
-                      "Peaceful Resting Places, Heartfelt Memorial Services"," Thank you and God Bless!"
+                     "Honoring Lives with Dignity"," Compassion, and Care",
+                      "Peaceful Resting Places","Heartfelt Memorial Services"
                     ]}
                 typingSpeed={75}
                 pauseDuration={1500}
