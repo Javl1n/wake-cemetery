@@ -13,7 +13,7 @@ Route::get('/', function () {
 
 Route::name('members.')->prefix('/member')->controller(MemberController::class)->group(function () {
     Route::get('register', 'create')->name('create')->middleware(['role:member']);
-    Route::post('store', 'store')->name('store')->middleware(['role:member']);
+    Route::post('/', 'store')->name('store')->middleware(['role:member']);
 });
 
 // Route::name('subscription.')->prefix('/subscriptions')->group(function () {
