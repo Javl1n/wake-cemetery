@@ -1,6 +1,6 @@
 ﻿import { Head, usePage } from '@inertiajs/react';
 import { Navbar5 } from '@/components/navbar5';
-import { BackgroundPattern2 } from '@/components/background-pattern2';
+import { Hero } from '@/components/background-pattern2';
 import { Footer7 } from '@/components/footer7';
 import AnimatedContent from '@/components/AnimatedContent';
 import { BadgeCheck } from "lucide-react";
@@ -43,7 +43,7 @@ export default function Welcome({
 
                 <main className='flex-1 overflow-hidden'>
                     <section className='w-full'>
-                        <BackgroundPattern2 className="inset-0" />
+                        <Hero className="inset-0" />
                     </section>
 
                     <AnimatedContent
@@ -53,8 +53,7 @@ export default function Welcome({
                         duration={2}
                         ease="power2.out"
                     >
-                        {/* Membership Plans */}
-                        <section className="container flex flex-col items-center justify-center gap-8 lg:gap-15">
+                        <section id="next-section" className="container py-28 md:py-24 flex flex-col items-center justify-center gap-8 lg:gap-15">
                             <h1 className="text-3xl font-bold text-center relative inline-block">
                                 Membership Plans
                                 <span className="block h-1 w-100 bg-primary mx-auto mt-2"></span>

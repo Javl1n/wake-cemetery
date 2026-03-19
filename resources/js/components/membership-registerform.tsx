@@ -7,6 +7,7 @@
 // phone
 // address
 // nationality
+import { store } from '@/routes/members';
 import { Form, Link } from "@inertiajs/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
