@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,15 @@ class MemberFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            "user_id" => User::factory()->state([
+                'role' => 'member'
+            ]),
+            "sex" => fake()->boolean(),
+            "date_of_birth" => fake()->date(max: now()->subYear(18)),
+            "civil_status" => fake()->randomElement(['single', 'married', 'divorced', 'widowed']),
+            "phone" => fake()->phoneNumber(),
+            "address" => fake()->address(),
+            "nationality" => "Filipino",
         ];
     }
 }

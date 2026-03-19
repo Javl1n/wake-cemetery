@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Member;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -21,11 +22,28 @@ class DatabaseSeeder extends Seeder
             'password' => 'password',
             'role' => 'admin',
         ]);
-        User::factory()->create([
-            'name' => 'user',
-            'email' => 'user@gmail.com',
+
+        User::factory()->state([
+            'name' => 'Test Member',
+            'email' => 'member@gmail.com',
             'password' => 'password',
-            'role' => 'member',
+            'role' => 'member'
+        ])->has(Member::factory()->count(1))
+            ->create();
+
+        User::factory()->create([
+            'name' => 'Test Staff',
+            'email' => 'staff@gmail.com',
+            'password' => 'password',
+            'role' => 'staff',
+        ]);
+
+        User::factory(10, [
+            'role' => 'staff'
+        ])->create();
+
+        $this->call([
+            MemberSeeder::class,
         ]);
     }
 }
