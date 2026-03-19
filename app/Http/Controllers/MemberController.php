@@ -24,14 +24,6 @@ class MemberController extends Controller
     {
         Gate::authorize('create', Member::class);
 
-        // inputs to include:
-        // date_of_birth
-        // sex
-        // civil_status: single, married, divorced, widowed
-        // phone
-        // address
-        // nationality
-
         return inertia()->render('members/register');
     }
 

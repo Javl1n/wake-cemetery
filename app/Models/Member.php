@@ -19,6 +19,16 @@ class Member extends Model
         'nationality',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Member $member) {
+            $year = now()->year;
+            $count = static::whereYear('created_at', $year)
+                ->latest()->get()->count();
+            $member->member_number = $year . '-' . sprintf('%06d', $count + 1);
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
