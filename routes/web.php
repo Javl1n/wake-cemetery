@@ -11,12 +11,12 @@ Route::get('/', function () {
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->middleware('guest')->name('home');
-//User
+//Admin
 
 //Staff
 
 
-//Admin
+//Member
 Route::name('members.')->prefix('/member')->controller(MemberController::class)->group(function () {
     Route::get('register', 'create')->name('create')->middleware(['role:member']);
     Route::post('/', 'store')->name('store')->middleware(['role:member']);
