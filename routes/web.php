@@ -5,12 +5,18 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
+//Guests
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
-})->name('home');
+})->middleware('guest')->name('home');
+//Admin
 
+//Staff
+
+
+//Member
 Route::name('members.')->prefix('/member')->controller(MemberController::class)->group(function () {
     Route::get('register', 'create')->name('create')->middleware(['role:member']);
     Route::post('/', 'store')->name('store')->middleware(['role:member']);

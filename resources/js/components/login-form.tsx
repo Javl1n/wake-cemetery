@@ -15,6 +15,7 @@ import TextLink from '@/components/text-link'
 import { register } from '@/routes'
 import { request } from '@/routes/password'
 import { store } from '@/routes/login'
+import { Home } from "lucide-react";
 
 type LoginFormProps = {
   status?: string
@@ -45,6 +46,9 @@ export default function LoginForm({
             {({ processing, errors }) => (
               <>
                 <FieldGroup>
+                    <a href="/" className="w-10 relative">
+                        <Home />
+                    </a>
                   <div className="flex flex-col items-center gap-2 text-center">
                     <h1 className="text-2xl font-bold">Welcome</h1>
                     <p className="text-muted-foreground text-balance">
