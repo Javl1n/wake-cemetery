@@ -7,6 +7,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --background: oklch(0.9711 0.0074 80.7211);
   --foreground: oklch(0.3000 0.0358 30.2042);

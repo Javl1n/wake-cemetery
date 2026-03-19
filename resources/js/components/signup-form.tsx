@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import InputError from "@/components/input-error"
+import { Home } from "lucide-react"
 
 export type SignupFormProps = {
   formProps?: Partial<Omit<React.ComponentProps<typeof Form>, "children">>
@@ -28,6 +29,9 @@ export function SignupForm({
     <Form className={formClassName} {...formProps}>
       {({ processing, errors }) => (
         <FieldGroup className="grid grid-cols-1 md:grid-cols-2 md:gap-5 gap-2">
+            <a href="/" className="w-10 absolute top-10 left-15">
+                <img src="/system/logo.png" className="min-h-20 min-w-20" alt="St. luiz Logo" />
+            </a>
           <div className="col-span-full flex flex-col items-center gap-2 text-center">
             <h1 className="text-2xl font-bold">Create your account</h1>
             <p className="text-sm text-balance text-muted-foreground">

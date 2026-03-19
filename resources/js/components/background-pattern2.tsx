@@ -7,7 +7,7 @@ interface BackgroundPattern2Props {
   className?: string;
 }
 
-const BackgroundPattern2 = ({ className }: BackgroundPattern2Props) => {
+const Hero = ({ className }: BackgroundPattern2Props) => {
   return (
     <div className={cn("relative flex h-full items-center justify-center", className)}>
       <div className="absolute inset-0 z-0">
@@ -37,4 +37,4 @@ const BackgroundPattern2 = ({ className }: BackgroundPattern2Props) => {
   );
 };
 
-export { BackgroundPattern2 };
+export { Hero };

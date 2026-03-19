@@ -1,3 +1,14 @@
+
+// diri ang membership form choi
+
+// inputs to include:
+// date_of_birth
+// sex
+// civil_status: single, married, divorced, widowed
+// phone
+// address
+// nationality
+import { store } from '@/routes/members';
 import { Form, Link } from "@inertiajs/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"

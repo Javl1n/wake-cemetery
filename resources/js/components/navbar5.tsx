@@ -82,11 +82,11 @@ const Navbar5 = ({ className }: Navbar5Props) => {
             href="https://www.shadcnblocks.com"
             className="flex items-center"
           >
-            {/* <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg"
+            <img
+              src="/system/logo.png"
               className="max-h-8"
-              alt="Shadcn UI Navbar"
-            /> */}
+              alt="St. luiz Logo"
+            />
             <span className="text-lg font-semibold text-primary tracking-tighter">
                 St. Luiz Cemetery and Wake Services
             </span>

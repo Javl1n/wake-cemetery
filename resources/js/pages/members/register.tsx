@@ -1,6 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { login } from '@/routes';
-import { store } from '@/routes/members/index';
 import { MembershipRegisterForm } from '@/components/membership-registerform';
 
 export default function MembershipRegistration() {
