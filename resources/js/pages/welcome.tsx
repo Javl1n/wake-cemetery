@@ -104,7 +104,7 @@ export default function Welcome({
                             </div>
                         </section>
                         {/* Comparison Table */}
-                        <section className='w-full h-full relative mt-20'>
+                        <section className='w-full h-full relative mt-20 p-1 md:p-10 '>
                             <h2 className='text-2xl font-bold text-center'>Membership Plan Benefits</h2>
                             <span className="block h-1 w-100 bg-primary mx-auto mt-2 mb-10"></span>
                             <MembershipComparisonTable />

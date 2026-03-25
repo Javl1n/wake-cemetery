@@ -10,9 +10,11 @@ Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
-})->middleware('guest')->name('home');
+})->name('home');
 //Admin
-
+Route::get('dashboard', function () {
+    return Inertia::render('admin/dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 //Staff
 
 
@@ -28,8 +30,6 @@ Route::name('members.')->prefix('/member')->controller(MemberController::class)-
 //     });
 // });
 
-Route::get('dashboard', function () {
-    return Inertia::render('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+
 
 require __DIR__ . '/settings.php';
