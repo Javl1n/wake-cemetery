@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use PDO;
 
 class Subscription extends Model
 {
@@ -28,5 +29,15 @@ class Subscription extends Model
     public function schedules()
     {
         return $this->hasMany(PremiumSchedule::class, 'subscription_id');
+    }
+
+    public function claims()
+    {
+        return $this->hasMany(InsuranceClaim::class, 'subscription_id');
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewer_id');
     }
 }

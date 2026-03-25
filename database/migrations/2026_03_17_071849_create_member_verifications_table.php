@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('id_number');
             $table->string('id_path');
             $table->string('date_verified')->nullable();
-            $table->foreignId('verified_by')->nullable()->constrained('users');
+            $table->foreignId('reviewer_id')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

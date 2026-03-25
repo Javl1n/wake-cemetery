@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('beneficiaries', function (Blueprint $table) {
+        Schema::create('deceased_tributes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('subscription_id')->constrained();
-            $table->string('name');
-            $table->string('relationship');
-            $table->string('contact');
-            $table->date('date_of_birth');
-            $table->string('place_of_birth');
+            $table->foreignId('obituary_id')->constrained('deceased_obituaries');
+            $table->string('uploader_name');
+            $table->string('special_relations');
+            $table->string('image')->unique();
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('beneficiaries');
+        Schema::dropIfExists('deceased_tributes');
     }
 };

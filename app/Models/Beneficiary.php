@@ -14,4 +14,9 @@ class Beneficiary extends Model
     {
         return $this->belongsTo(Subscription::class);
     }
+
+    public function deceased()
+    {
+        return $this->hasOne(Deceased::class, 'deceased_id');
+    }
 }

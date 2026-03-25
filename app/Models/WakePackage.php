@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class WakePackage extends Model
+{
+    /** @use HasFactory<\Database\Factories\WakePackageFactory> */
+    use HasFactory;
+
+    public function schedules()
+    {
+        return $this->hasMany(WakeSchedule::class, 'package_id');
+    }
+
+    public function services()
+    {
+        return $this->belongsToMany(WakeService::class, 'package_service', 'package_id');
+    }
+
+    public function items()
+    {
+        return $this->belongsToMany(InventoryItem::class, 'item_package', 'package_id')->withPivot('quantity');
+    }
+}

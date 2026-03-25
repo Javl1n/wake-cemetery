@@ -11,14 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('beneficiaries', function (Blueprint $table) {
+        Schema::create('package_service', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('subscription_id')->constrained();
-            $table->string('name');
-            $table->string('relationship');
-            $table->string('contact');
-            $table->date('date_of_birth');
-            $table->string('place_of_birth');
+            $table->foreignId('package_id')->constrained('wake_packages');
+            $table->foreignId('service_id')->constrained('wake_services');
             $table->timestamps();
         });
     }
@@ -28,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('beneficiaries');
+        Schema::dropIfExists('package_service');
     }
 };

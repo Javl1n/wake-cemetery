@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subscriptions', function (Blueprint $table) {
+        Schema::create('insurance_claims', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('member_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('insurance_id')->constrained();
-            $table->enum('status', ['pending', 'approved', 'rejected', 'lapsed']);
+            $table->foreignId('schedule_id')->constrained('wake_schedules');
+            $table->foreignId('subscription_id')->constrained('subscriptions');
             $table->foreignId('reviewer_id')->constrained('users');
-            $table->timestamp('reviewed_at');
+            $table->float('approved_amount');
+            $table->enum('status', ['filed', 'approved', 'rejected', 'paid']);
+            $table->timestamp('filed_at');
+            $table->timestamp('reviewed_ad');
             $table->timestamps();
         });
     }
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subscriptions');
+        Schema::dropIfExists('insurance_claims');
     }
 };

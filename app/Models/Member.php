@@ -38,4 +38,9 @@ class Member extends Model
     {
         return $this->hasOne(MemberVerification::class);
     }
+
+    public function deceaseds()
+    {
+        return $this->hasMany(Deceased::class, 'member_id');
+    }
 }

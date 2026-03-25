@@ -61,4 +61,22 @@ class User extends Authenticatable
     {
         return in_array($this->role, $roles);
     }
+
+    public function reviewedSubscriptions()
+    {
+        if (!$this->hasRole(['staff', 'admin'])) {
+            return null;
+        }
+
+        return $this->hasMany(Subscription::class, 'reviewer_id');
+    }
+
+    public function reviewedClaims()
+    {
+        if (!$this->hasRole(['staff', 'admin'])) {
+            return null;
+        }
+
+        return $this->hasMany(InsuranceClaim::class, 'reviewer_id');
+    }
 }
