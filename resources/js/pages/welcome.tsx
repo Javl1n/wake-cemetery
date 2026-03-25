@@ -1,4 +1,5 @@
-﻿import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import { Navbar5 } from '@/components/navbar5';
 import { Hero } from '@/components/background-pattern2';
 import { Footer7 } from '@/components/footer7';
@@ -17,12 +18,27 @@ import {
 import { MembershipComparisonTable } from '@/components/MembershipComparisonTable';
 
 
+type InsuranceProduct = {
+    id: number;
+    name: string;
+    description: string;
+    beneficiaries: number;
+    premium: number;
+    frequency: 'monthly' | 'semi-anually' | 'anually';
+};
+
 export default function Welcome({
     canRegister = true,
 }: {
     canRegister?: boolean;
 }) {
-    const { auth } = usePage().props;
+    const { auth, insurances: insurancePlans = [], showInsuranceModal = false } = usePage().props as {
+        auth: any;
+        insurances?: InsuranceProduct[];
+        showInsuranceModal?: boolean;
+    };
+
+    const [isModalOpen, setIsModalOpen] = useState(showInsuranceModal);
 
     return (
         <>
@@ -42,12 +58,15 @@ export default function Welcome({
                 </header>
 
                 <main className='flex-1 overflow-hidden'>
-                    <section className='w-full'>
-                        <Hero className="inset-0" />
-                    </section>
+                    <div className='flex flex-col h-screen'>
+                        <section className='w-full h-full'>
+                            <Hero className="inset-0" />
+                        </section>
+                    </div>
+
 
                     <AnimatedContent
-                        className="container mx-auto py-12"
+                        className="container mx-auto"
                         direction="vertical"
                         distance={50}
                         duration={2}
@@ -60,47 +79,51 @@ export default function Welcome({
                             </h1>
 
                             <div className='flex w-full flex-col items-center justify-center gap-5 lg:flex-row overflow-x-auto'>
-                                {Array.from({ length: 3 }).map((_, i) => (
-                                    <GlareHover
-                                        key={i}
-                                        glareColor="#ffffff"
-                                        glareOpacity={0.3}
-                                        glareAngle={-30}
-                                        glareSize={300}
-                                        transitionDuration={800}
-                                        playOnce={false}
-                                    >
-                                        <Card className='w-full max-w-sm gap-10'>
-                                            <CardHeader className='gap-4 justify-center'>
-                                                <CardTitle className='text-center text-xl font-semibold tracking-tight'>Monthly</CardTitle>
-                                                <CardDescription className='text-center text-6xl font-bold'>$78</CardDescription>
-                                                <CardDescription className='text-center text-foreground/40'>per month</CardDescription>
-                                                <Button variant="default" size="lg" className='w-70 h-11 font-mono hover:bg-primary/80 font-semibold text-background cursor-pointer rounded-2xl'>
-                                                    Start Monthly
-                                                </Button>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <ul className='mt-1'>
-                                                    <li className='mb-2 text-xs font-medium uppercase text-foreground/40'>Whats Included:</li>
-                                                    <div className='ml-4'>
-                                                        {Array.from({ length: 5 }).map((_, j) => (
-                                                            <li key={j} className='flex items-center w-full justify-between mt-5'>
-                                                                <div className='flex items-center gap-3 w-full'>
-                                                                    <BadgeCheck className='text-green-500' />
-                                                                    <p>Access to exclusive content</p>
-                                                                </div>
-                                                                <div className='w-5 h-5 rounded-full flex items-center justify-center'>
-                                                                    <p className='text-sm'>23</p>
-                                                                </div>
-                                                            </li>
-                                                        ))}
-                                                    </div>
-                                                </ul>
-                                            </CardContent>
-                                            <CardFooter />
-                                        </Card>
-                                    </GlareHover>
-                                ))}
+                                {Array.from({ length: insurancePlans.length || 3 }).map((_, i) => {
+                                    const plan = insurancePlans[i];
+                                    return (
+                                        <GlareHover
+                                            key={i}
+                                            glareColor="#ffffff"
+                                            glareOpacity={0.3}
+                                            glareAngle={-30}
+                                            glareSize={300}
+                                            transitionDuration={800}
+                                            playOnce={false}
+                                            className='rounded-xl'
+                                        >
+                                            <Card className='w-full max-w-sm gap-10'>
+                                                <CardHeader className='gap-4 justify-center'>
+                                                    <CardTitle className='text-center text-lg font-semibold tracking-tight'>{plan?.name || 'Monthly'}</CardTitle>
+                                                    <CardDescription className='text-center text-5xl font-bold'>{plan ? `₱${plan.premium.toFixed()}` : '$78'}</CardDescription>
+                                                    <CardDescription className='text-center text-foreground/40'>{plan ? `per ${plan.frequency.replace('-', ' ')}` : 'per month'}</CardDescription>
+                                                    <Button variant="default" size="lg" className='w-70 h-11 font-mono hover:bg-primary/80 font-semibold text-background cursor-pointer rounded-2xl'>
+                                                        {plan ? 'Select Plan' : 'Start Monthly'}
+                                                    </Button>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <ul className='mt-1'>
+                                                        <li className='mb-2 text-xs font-medium uppercase text-foreground/40'>Whats Included:</li>
+                                                        <div className='ml-4'>
+                                                            {Array.from({ length: 5 }).map((_, j) => (
+                                                                <li key={j} className='flex items-center w-full justify-between mt-5'>
+                                                                    <div className='flex items-center gap-3 w-full'>
+                                                                        <BadgeCheck className='text-green-500' />
+                                                                        <p>Access to exclusive content</p>
+                                                                    </div>
+                                                                    <div className='w-5 h-5 rounded-full flex items-center justify-center'>
+                                                                        <p className='text-sm'>23</p>
+                                                                    </div>
+                                                                </li>
+                                                            ))}
+                                                        </div>
+                                                    </ul>
+                                                </CardContent>
+                                                <CardFooter />
+                                            </Card>
+                                        </GlareHover>
+                                    );
+                                })}
                             </div>
                         </section>
                         {/* Comparison Table */}

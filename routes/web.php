@@ -9,6 +9,7 @@ use Laravel\Fortify\Features;
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
+        'insurances' => App\Models\Insurance::all(),
     ]);
 })->name('home');
 //Admin
@@ -20,6 +21,8 @@ Route::get('dashboard', function () {
 
 //Member
 Route::name('members.')->prefix('/member')->controller(MemberController::class)->group(function () {
+    Route::get('/welcome', 'welcome')->name('welcome')->middleware(['auth', 'verified', 'role:member']);
+    Route::get('/dashboard', 'dashboard')->name('dashboard')->middleware(['auth', 'verified', 'role:member']);
     Route::get('register', 'create')->name('create')->middleware(['role:member']);
     Route::post('/', 'store')->name('store')->middleware(['role:member']);
 });

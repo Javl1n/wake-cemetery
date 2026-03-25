@@ -18,6 +18,22 @@ class MemberController extends Controller
     }
 
     /**
+     * Show the member welcome page with services.
+     */
+    public function welcome()
+    {
+        return inertia()->render('members/welcome');
+    }
+
+    /**
+     * Show the member dashboard.
+     */
+    public function dashboard()
+    {
+        return inertia()->render('members/dashboard');
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
