@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Insurance;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 
@@ -18,9 +19,14 @@ class SubscriptionController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        $insurances = Insurance::all();
+        $insurance = Insurance::find($request->insurance);
+        return inertia()->render('insurance/register', [
+            'insurances' => $insurances,
+            'insurance' => $insurance
+        ]);
     }
 
     /**

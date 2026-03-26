@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureMemberVerified;
 use App\Http\Middleware\EnsureUserRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -24,7 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'role' => EnsureUserRole::class
+            'role' => EnsureUserRole::class,
+            'member-verified' => EnsureMemberVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

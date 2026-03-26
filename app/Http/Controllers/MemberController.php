@@ -64,7 +64,7 @@ class MemberController extends Controller
 
         $request->user()->member()->create($validated);
 
-        return redirect()->route('dashboard');
+        return redirect()->intended(route('members.welcome'));
     }
 
     /**
