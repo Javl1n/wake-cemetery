@@ -61,7 +61,7 @@ export default function Register() {
                         </div>
                     </div>
                 </div>
-                                <div className="relative hidden bg-muted lg:block h-full min-h-svh">
+                <div className="relative hidden bg-muted lg:block h-full min-h-svh">
                     <Carousel
                         setApi={handleApiChange}
                         className="w-full h-full [&>div]:h-full [&>div>div]:h-full"
