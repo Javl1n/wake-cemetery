@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Insurance;
 use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -22,7 +23,9 @@ class MemberController extends Controller
      */
     public function welcome()
     {
-        return inertia()->render('members/welcome');
+        return inertia()->render('members/welcome', [
+            'insurances' => Insurance::all(),
+        ]);
     }
 
     /**
