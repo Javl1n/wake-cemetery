@@ -22,7 +22,7 @@ class SubscriptionController extends Controller
     public function create(Request $request)
     {
         $insurances = Insurance::all();
-        $insurance = Insurance::find($request->insurance);
+        $insurance = $request->insurance ? Insurance::find($request->insurance) : $insurances->first();
         return inertia()->render('insurance/register', [
             'insurances' => $insurances,
             'insurance' => $insurance

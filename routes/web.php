@@ -32,7 +32,7 @@ Route::name('members.')->prefix('/member')->controller(MemberController::class)-
 });
 
 Route::name('subscriptions.')->prefix('/subscription')->controller(SubscriptionController::class)->group(function () {
-    Route::get('/register', 'create')->name('create')->middleware(['member-verified']);
+    Route::get('/register', 'create')->name('create')->middleware(['auth', 'member-verified']);
 });
 
 // Route::name('subscription.')->prefix('/subscriptions')->group(function () {
