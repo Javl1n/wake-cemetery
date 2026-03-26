@@ -26,7 +26,7 @@ const Hero = ({ className }: BackgroundPattern2Props) => {
           saturation={1}
         />
       </div>
-      <div className="relative z-10 container py-12">
+      <div className="relative z-10 container">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center">
             <FadeContent blur={true} duration={1500} initialOpacity={0}>
                 <PatternPlaceholder />

@@ -2,22 +2,9 @@
 
 import { MenuIcon } from "lucide-react";
 import { router, usePage } from "@inertiajs/react";
+
 import { cn } from "@/lib/utils";
-import { User } from "lucide-react"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuPortal,
-    DropdownMenuSeparator,
-    DropdownMenuShortcut,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import {
   Accordion,
   AccordionContent,
@@ -42,14 +29,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-interface Navbar5Props {
+interface navloggedprops {
   className?: string;
 }
 
-const Navbar5 = ({ className }: Navbar5Props) => {
+const Navlogged = ({ className }: navloggedprops) => {
     const { url } = usePage();
     const { auth } = usePage().props;
-
     const features = [
         {
         title: "Dashboard",
@@ -155,40 +141,14 @@ const Navbar5 = ({ className }: Navbar5Props) => {
                   href="#"
                   className={navigationMenuTriggerStyle()}
                 >
-                  About us
+                  Adds-on
                 </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
           <div className="hidden items-center gap-4 lg:flex">
-            {auth.user ? (
-                <>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="default" size="icon" className="rounded-full">
-                                <User className="h-5 w-5"/>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-43" align="start">
-                            <DropdownMenuGroup>
-                                <DropdownMenuLabel className=" text-foreground/30">My Account</DropdownMenuLabel>
-                                <DropdownMenuItem>Profile</DropdownMenuItem>
-                                <DropdownMenuItem>Plan History</DropdownMenuItem>
-                                <DropdownMenuItem>Purchase History</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Account Settings</DropdownMenuItem>
-                                <DropdownMenuItem>Log out</DropdownMenuItem>
-                            </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </>
-            ):(
-                <>
-                    <Button variant="secondary" onClick={() => router.visit('/login')}>Log in</Button>
-                    <Button onClick={() => router.visit('/register')}>Get Started</Button>
-                </>
-            )}
-
+            <Button variant="secondary" onClick={() => router.visit('/logout')}>Log out</Button>
+            <Button onClick={() => router.visit('/register')}>Get Started</Button>
           </div>
           <Sheet>
             <SheetTrigger asChild className="lg:hidden">
@@ -210,7 +170,6 @@ const Navbar5 = ({ className }: Navbar5Props) => {
                     />
                     <span className="text-lg font-semibold tracking-tighter">
                       Shadcnblocks.com
-                      <svg></svg>
                     </span>
                   </a>
                 </SheetTitle>
@@ -255,7 +214,7 @@ const Navbar5 = ({ className }: Navbar5Props) => {
                   </a>
                 </div>
                 <div className="mt-6 flex flex-col gap-4">
-                  <Button variant="outline" onClick={() => router.visit('/login')}>Log in</Button>
+                  <Button variant="outline" onClick={() => router.visit('/logout')}>Logout</Button>
                   <Button onClick={() => router.visit('/register')}>Get Started</Button>
                 </div>
               </div>
@@ -267,4 +226,4 @@ const Navbar5 = ({ className }: Navbar5Props) => {
   );
 };
 
-export { Navbar5 };
+export { Navlogged };
