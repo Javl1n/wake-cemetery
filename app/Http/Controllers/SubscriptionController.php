@@ -34,7 +34,20 @@ class SubscriptionController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            "insurance" => 'required|exists:insurances,id',
+            "beneficiaries" => "array",
+            "beneficiaries.*.name" => "string",
+            "beneficiaries.*.relationship" => "string",
+            "beneficiaries.*.contact" => "string",
+            "beneficiaries.*.date_of_birth" => "date",
+            "beneficiaries.*.place_of_birth" => "string",
+        ]);
+
+        Insurance::find($request->insurance)->subscriptions->create([
+            "member_id" => $request->user()->id,
+            "status" => "pending",
+        ]);
     }
 
     /**

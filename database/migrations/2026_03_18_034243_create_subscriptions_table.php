@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('member_id')->constrained()->cascadeOnDelete();
             $table->foreignId('insurance_id')->constrained();
-            $table->enum('status', ['pending', 'approved', 'rejected', 'lapsed']);
-            $table->foreignId('reviewer_id')->constrained('users');
-            $table->timestamp('reviewed_at');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'lapsed'])->default('pending');
+            $table->foreignId('reviewer_id')->constrained('users')->nullable();
+            $table->timestamp('reviewed_at')->nullable();
             $table->timestamps();
         });
     }

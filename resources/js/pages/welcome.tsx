@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { Navbar5 } from '@/components/navbar5';
 import { Hero } from '@/components/background-pattern2';
@@ -16,16 +16,10 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { MembershipComparisonTable } from '@/components/MembershipComparisonTable';
+import members from '@/routes/members';
+import subscriptions from '@/routes/subscriptions';
+import { InsuranceProduct } from '@/types';
 
-
-type InsuranceProduct = {
-    id: number;
-    name: string;
-    description: string;
-    beneficiaries: number;
-    premium: number;
-    frequency: 'monthly' | 'semi-anually' | 'anually';
-};
 
 export default function Welcome({
     canRegister = true,
@@ -97,9 +91,15 @@ export default function Welcome({
                                                     <CardTitle className='text-center text-lg font-semibold tracking-tight'>{plan?.name || 'Monthly'}</CardTitle>
                                                     <CardDescription className='text-center text-5xl font-bold'>{plan ? `₱${plan.premium.toFixed()}` : '$78'}</CardDescription>
                                                     <CardDescription className='text-center text-foreground/40'>{plan ? `per ${plan.frequency.replace('-', ' ')}` : 'per month'}</CardDescription>
-                                                    <Button variant="default" size="lg" className='w-70 h-11 font-mono hover:bg-primary/80 font-semibold text-background cursor-pointer rounded-2xl'>
+
+                                                    <Button onClick={() => {
+                                                        router.get(subscriptions.create(), {
+                                                            insurance: plan.id
+                                                        })
+                                                    }} variant="default" size="lg" className='w-70 h-11 font-mono hover:bg-primary/80 font-semibold text-background cursor-pointer rounded-2xl'>
                                                         {plan ? 'Select Plan' : 'Start Monthly'}
                                                     </Button>
+
                                                 </CardHeader>
                                                 <CardContent>
                                                     <ul className='mt-1'>
