@@ -23,9 +23,10 @@ class SubscriptionController extends Controller
     {
         $insurances = Insurance::all();
         $insurance = $request->insurance ? Insurance::find($request->insurance) : $insurances->first();
+
         return inertia()->render('insurance/register', [
             'insurances' => $insurances,
-            'insurance' => $insurance
+            'insurance' => $insurance,
         ]);
     }
 
@@ -34,20 +35,26 @@ class SubscriptionController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            "insurance" => 'required|exists:insurances,id',
-            "beneficiaries" => "array",
-            "beneficiaries.*.name" => "string",
-            "beneficiaries.*.relationship" => "string",
-            "beneficiaries.*.contact" => "string",
-            "beneficiaries.*.date_of_birth" => "date",
-            "beneficiaries.*.place_of_birth" => "string",
+        $validated = $request->validate([
+            'insurance' => 'required|exists:insurances,id',
+            'beneficiaries' => 'array',
+            'beneficiaries.*.name' => 'required|string',
+            'beneficiaries.*.relationship' => 'required|string',
+            'beneficiaries.*.contact' => 'required|string',
+            'beneficiaries.*.date_of_birth' => 'required|date',
+            'beneficiaries.*.place_of_birth' => 'required|string',
         ]);
 
-        Insurance::find($request->insurance)->subscriptions->create([
-            "member_id" => $request->user()->id,
-            "status" => "pending",
+        $subscription = Insurance::find($validated['insurance'])->subscriptions()->create([
+            'member_id' => $request->user()->member->id,
+            'status' => 'pending',
         ]);
+
+        if (! empty($validated['beneficiaries'])) {
+            $subscription->beneficiaries()->createMany($validated['beneficiaries']);
+        }
+
+        return redirect()->route('members.welcome');
     }
 
     /**

@@ -54,9 +54,9 @@ class MemberController extends Controller
         Gate::authorize('create', Member::class);
 
         $validated = $request->validate([
-            "date_of_birth" => 'required|date',
-            'sex' => "required|boolean",
-            "civil_status" => [
+            'date_of_birth' => 'required|date',
+            'sex' => 'required|boolean',
+            'civil_status' => [
                 'required',
                 Rule::in(['single', 'married', 'divorced', 'widowed']),
             ],
@@ -67,7 +67,7 @@ class MemberController extends Controller
 
         $request->user()->member()->create($validated);
 
-        return redirect()->intended(route('members.welcome'));
+        return redirect()->route('subscriptions.create');
     }
 
     /**

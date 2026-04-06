@@ -10,6 +10,14 @@ class Beneficiary extends Model
     /** @use HasFactory<\Database\Factories\BeneficiaryFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+        'relationship',
+        'contact',
+        'date_of_birth',
+        'place_of_birth',
+    ];
+
     public function subscription()
     {
         return $this->belongsTo(Subscription::class);
