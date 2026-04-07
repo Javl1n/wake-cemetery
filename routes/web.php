@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\InsuranceController;
+use App\Http\Controllers\CemeteryMapController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
-//Guests
+// Guests
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
@@ -15,15 +15,14 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-//Admin
+// Admin
 Route::get('dashboard', function () {
     return Inertia::render('admin/dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-//Staff
+// Staff
 
-
-//Member
+// Member
 Route::name('members.')->prefix('/member')->controller(MemberController::class)->group(function () {
     Route::get('/welcome', 'welcome')->name('welcome')->middleware(['auth', 'verified', 'role:member']);
     Route::get('/dashboard', 'dashboard')->name('dashboard')->middleware(['auth', 'verified', 'role:member']);
@@ -36,12 +35,22 @@ Route::name('subscriptions.')->prefix('/subscription')->controller(SubscriptionC
     Route::post('/', 'store')->name('store')->middleware(['auth', 'member-verified']);
 });
 
+// Cemetery Map (Public access)
+Route::name('cemetery.')->prefix('cemetery')->controller(CemeteryMapController::class)->group(function () {
+    Route::get('/map', 'index')->name('map');
+    Route::get('/search', 'search')->name('search');
+});
+
+// Admin - Cemetery Management
+Route::middleware(['auth', 'verified', 'role:admin,staff'])->group(function () {
+    Route::resource('cemetery-sections', App\Http\Controllers\CemeterySectionController::class)->except(['show', 'create', 'edit']);
+    Route::resource('cemetery-plots', App\Http\Controllers\CemeteryPlotController::class)->except(['show', 'create', 'edit']);
+});
+
 // Route::name('subscription.')->prefix('/subscriptions')->group(function () {
 //     Route::get('create', function () {
 //         return inertia()->render('');
 //     });
 // });
 
-
-
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

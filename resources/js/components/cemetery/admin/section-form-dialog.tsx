@@ -1,0 +1,204 @@
+import { useForm } from '@inertiajs/react';
+import { FormEventHandler } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import type { CemeterySection } from '@/types/cemetery';
+
+interface SectionFormDialogProps {
+    section?: CemeterySection;
+    open: boolean;
+    onClose: () => void;
+}
+
+export default function SectionFormDialog({
+    section,
+    open,
+    onClose,
+}: SectionFormDialogProps) {
+    const { data, setData, post, put, processing, errors, reset } = useForm({
+        name: section?.name || '',
+        code: section?.code || '',
+        description: section?.description || '',
+        color: section?.color || '#3b82f6',
+        total_plots: section?.total_plots || 0,
+        available_plots: section?.available_plots || 0,
+    });
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+
+        if (section) {
+            put(`/cemetery-sections/${section.id}`, {
+                onSuccess: () => {
+                    reset();
+                    onClose();
+                },
+            });
+        } else {
+            post('/cemetery-sections', {
+                onSuccess: () => {
+                    reset();
+                    onClose();
+                },
+            });
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle>
+                        {section ? 'Edit Cemetery Section' : 'Create Cemetery Section'}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {section
+                            ? 'Update the cemetery section details below.'
+                            : 'Add a new cemetery section to organize burial plots.'}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={submit}>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Section Name</Label>
+                            <Input
+                                id="name"
+                                value={data.name}
+                                onChange={(e) => setData('name', e.target.value)}
+                                placeholder="e.g., Garden of Peace"
+                                required
+                            />
+                            {errors.name && (
+                                <p className="text-sm text-destructive">{errors.name}</p>
+                            )}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="code">Section Code</Label>
+                            <Input
+                                id="code"
+                                value={data.code}
+                                onChange={(e) =>
+                                    setData('code', e.target.value.toUpperCase())
+                                }
+                                placeholder="e.g., SEC-A"
+                                required
+                            />
+                            {errors.code && (
+                                <p className="text-sm text-destructive">{errors.code}</p>
+                            )}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="description">Description (Optional)</Label>
+                            <Textarea
+                                id="description"
+                                value={data.description}
+                                onChange={(e) => setData('description', e.target.value)}
+                                placeholder="Brief description of this section..."
+                                rows={3}
+                            />
+                            {errors.description && (
+                                <p className="text-sm text-destructive">
+                                    {errors.description}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="color">Section Color</Label>
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    id="color"
+                                    type="color"
+                                    value={data.color}
+                                    onChange={(e) => setData('color', e.target.value)}
+                                    className="w-20 h-10"
+                                    required
+                                />
+                                <span className="text-sm text-muted-foreground">
+                                    Used for map markers and visual identification
+                                </span>
+                            </div>
+                            {errors.color && (
+                                <p className="text-sm text-destructive">{errors.color}</p>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="total_plots">Total Plots</Label>
+                                <Input
+                                    id="total_plots"
+                                    type="number"
+                                    min="0"
+                                    value={data.total_plots}
+                                    onChange={(e) =>
+                                        setData('total_plots', parseInt(e.target.value) || 0)
+                                    }
+                                    required
+                                />
+                                {errors.total_plots && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.total_plots}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="available_plots">Available Plots</Label>
+                                <Input
+                                    id="available_plots"
+                                    type="number"
+                                    min="0"
+                                    value={data.available_plots}
+                                    onChange={(e) =>
+                                        setData(
+                                            'available_plots',
+                                            parseInt(e.target.value) || 0,
+                                        )
+                                    }
+                                    required
+                                />
+                                {errors.available_plots && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.available_plots}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                            disabled={processing}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={processing}>
+                            {processing
+                                ? 'Saving...'
+                                : section
+                                  ? 'Update Section'
+                                  : 'Create Section'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}

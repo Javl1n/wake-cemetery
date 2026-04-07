@@ -17,7 +17,11 @@ class InsuranceFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->unique()->words(3, true).' Plan',
+            'description' => fake()->paragraph(),
+            'beneficiaries' => fake()->numberBetween(1, 5),
+            'premium' => fake()->randomFloat(2, 500, 5000),
+            'frequency' => fake()->randomElement(['monthly', 'semi-anually', 'anually']),
         ];
     }
 }

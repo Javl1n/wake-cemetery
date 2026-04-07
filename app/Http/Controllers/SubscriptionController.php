@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Insurance;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class SubscriptionController extends Controller
 {
@@ -21,6 +22,8 @@ class SubscriptionController extends Controller
      */
     public function create(Request $request)
     {
+        Gate::authorize('create', Subscription::class);
+
         $insurances = Insurance::all();
         $insurance = $request->insurance ? Insurance::find($request->insurance) : $insurances->first();
 
@@ -35,6 +38,8 @@ class SubscriptionController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('create', Subscription::class);
+
         $validated = $request->validate([
             'insurance' => 'required|exists:insurances,id',
             'beneficiaries' => 'array',
@@ -45,7 +50,7 @@ class SubscriptionController extends Controller
             'beneficiaries.*.place_of_birth' => 'required|string',
         ]);
 
-        $subscription = Insurance::find($validated['insurance'])->subscriptions()->create([
+        $subscription = Insurance::get($validated['insurance'])->subscriptions()->create([
             'member_id' => $request->user()->member->id,
             'status' => 'pending',
         ]);

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Map, MapPin, MapPinHouseIcon } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -24,17 +24,30 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const cemeteryNavItems: NavItem[] = [
+    {
+        title: 'Sections',
+        icon: MapPinHouseIcon,
+        href: '/cemetery-sections',
+    },
+    {
+        title: 'Plots',
+        icon: Map,
+        href: '/cemetery-plots',
+    },
+]
+
 const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
+    // {
+    //     title: 'Repository',
+    //     href: 'https://github.com/laravel/react-starter-kit',
+    //     icon: Folder,
+    // },
+    // {
+    //     title: 'Documentation',
+    //     href: 'https://laravel.com/docs/starter-kits#react',
+    //     icon: BookOpen,
+    // },
 ];
 
 export function AppSidebar() {
@@ -54,6 +67,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <NavMain items={cemeteryNavItems} title='Cemetery' />
             </SidebarContent>
 
             <SidebarFooter>

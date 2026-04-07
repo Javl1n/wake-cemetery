@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Insurance;
+use App\Models\Member;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,11 @@ class SubscriptionFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'member_id' => Member::factory(),
+            'insurance_id' => Insurance::factory(),
+            'status' => 'approved',
+            'reviewer_id' => \App\Models\User::factory(),
+            'reviewed_at' => now(),
         ];
     }
 }

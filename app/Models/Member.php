@@ -25,7 +25,7 @@ class Member extends Model
             $year = now()->year;
             $count = static::whereYear('created_at', $year)
                 ->latest()->get()->count();
-            $member->member_number = $year . '-' . sprintf('%06d', $count + 1);
+            $member->member_number = $year.'-'.sprintf('%06d', $count + 1);
         });
     }
 
@@ -42,5 +42,10 @@ class Member extends Model
     public function deceaseds()
     {
         return $this->hasMany(Deceased::class, 'member_id');
+    }
+
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class, 'member_id');
     }
 }

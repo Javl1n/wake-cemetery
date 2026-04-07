@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Subscription;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class SubscriptionPolicy
 {
@@ -21,7 +20,7 @@ class SubscriptionPolicy
      */
     public function view(User $user, Subscription $subscription): bool
     {
-        return false;
+        return ! $user->hasRole(['member']) || $subscription->member->id === $user->member->id;
     }
 
     /**
@@ -29,7 +28,7 @@ class SubscriptionPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole(['member']) && ! is_null($user->member->subscription);
     }
 
     /**

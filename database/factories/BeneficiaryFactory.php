@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Subscription;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,12 @@ class BeneficiaryFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'subscription_id' => Subscription::factory(),
+            'name' => fake()->name(),
+            'relationship' => fake()->randomElement(['Spouse', 'Child', 'Parent', 'Sibling', 'Other']),
+            'contact' => fake()->phoneNumber(),
+            'date_of_birth' => fake()->date(),
+            'place_of_birth' => fake()->city().', '.fake()->country(),
         ];
     }
 }
