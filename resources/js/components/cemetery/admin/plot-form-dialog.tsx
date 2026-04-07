@@ -126,13 +126,14 @@ export default function PlotFormDialog({
                             <div className="grid gap-2">
                                 <Label htmlFor="section_id">Section</Label>
                                 <Select
-                                    value={data.section_id.toString()}
-                                    onValueChange={(value) => setData('section_id', parseInt(value))}
+                                    value={data.section_id ? data.section_id.toString() : 'none'}
+                                    onValueChange={(value) => setData('section_id', value === 'none' ? '' : parseInt(value))}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a section" />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="none">Select a section</SelectItem>
                                         {sections.map((section) => (
                                             <SelectItem
                                                 key={section.id}
@@ -230,16 +231,16 @@ export default function PlotFormDialog({
                                     Deceased (Optional)
                                 </Label>
                                 <Select
-                                    value={data.deceased_id.toString()}
+                                    value={data.deceased_id ? data.deceased_id.toString() : 'none'}
                                     onValueChange={(value) =>
-                                        setData('deceased_id', value ? parseInt(value) : '')
+                                        setData('deceased_id', value === 'none' ? '' : parseInt(value))
                                     }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select deceased" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">None</SelectItem>
+                                        <SelectItem value="none">None</SelectItem>
                                         {deceased.map((d) => (
                                             <SelectItem key={d.id} value={d.id.toString()}>
                                                 {d.name} ({d.date_of_death})

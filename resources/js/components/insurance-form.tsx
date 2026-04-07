@@ -1,4 +1,4 @@
-import { Form, router, useForm, usePage } from "@inertiajs/react"
+import { useForm, usePage } from "@inertiajs/react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -73,7 +73,7 @@ export function InsuranceForm({ className }: InsuranceFormProps) {
     const [step, setStep] = useState<1 | 2>(1)
     const [selectedInsurance, setSelectedInsurance] = useState<InsuranceProduct>(initialInsurance)
 
-    const { data, setData, processing, errors } = useForm<{
+    const form = useForm<{
         insurance: number
         beneficiaries: {
             name: string
@@ -88,7 +88,7 @@ export function InsuranceForm({ className }: InsuranceFormProps) {
     })
 
     function handleContinue() {
-        setData({
+        form.setData({
             insurance: selectedInsurance.id,
             beneficiaries: Array.from({ length: selectedInsurance.beneficiaries }, emptyBeneficiary),
         })
@@ -168,18 +168,18 @@ export function InsuranceForm({ className }: InsuranceFormProps) {
                         <span className="font-semibold">₱{selectedInsurance.premium.toLocaleString()} / {selectedInsurance.frequency}</span>
                     </div>
 
-                    <Form
+                    <form
                         onSubmit={(e) => {
                             e.preventDefault()
-                            router.post(subscriptions.store(), data as any)
+                            form.submit(subscriptions.store())
                         }}
                     >
                         <FieldGroup className="flex flex-col gap-6">
-                            {data.beneficiaries.length === 0 && (
+                            {form.data.beneficiaries.length === 0 && (
                                 <p className="text-sm text-muted-foreground">No beneficiaries required for this plan.</p>
                             )}
 
-                            {data.beneficiaries.map((beneficiary, index) => (
+                            {form.data.beneficiaries.map((beneficiary, index) => (
                                 <div key={index} className="rounded-lg border p-5 flex flex-col gap-4">
                                     <p className="text-sm font-semibold text-muted-foreground">Beneficiary {index + 1}</p>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -187,59 +187,59 @@ export function InsuranceForm({ className }: InsuranceFormProps) {
                                             <FieldLabel>Full Name</FieldLabel>
                                             <Input
                                                 value={beneficiary.name}
-                                                onChange={(e) => setData(`beneficiaries.${index}.name` as any, e.target.value)}
+                                                onChange={(e) => form.setData(`beneficiaries.${index}.name` as any, e.target.value)}
                                                 type="text"
                                                 placeholder="John Doe"
                                                 required
                                             />
-                                            <InputError message={errors[`beneficiaries.${index}.name` as keyof typeof errors]} />
+                                            <InputError message={form.errors[`beneficiaries.${index}.name` as keyof typeof form.errors]} />
                                         </Field>
 
                                         <Field>
                                             <FieldLabel>Relationship</FieldLabel>
                                             <Input
                                                 value={beneficiary.relationship}
-                                                onChange={(e) => setData(`beneficiaries.${index}.relationship` as any, e.target.value)}
+                                                onChange={(e) => form.setData(`beneficiaries.${index}.relationship` as any, e.target.value)}
                                                 type="text"
                                                 placeholder="e.g. Spouse, Child"
                                                 required
                                             />
-                                            <InputError message={errors[`beneficiaries.${index}.relationship` as keyof typeof errors]} />
+                                            <InputError message={form.errors[`beneficiaries.${index}.relationship` as keyof typeof form.errors]} />
                                         </Field>
 
                                         <Field className="">
                                             <FieldLabel>Contact</FieldLabel>
                                             <Input
                                                 value={beneficiary.contact}
-                                                onChange={(e) => setData(`beneficiaries.${index}.contact` as any, e.target.value)}
+                                                onChange={(e) => form.setData(`beneficiaries.${index}.contact` as any, e.target.value)}
                                                 type="text"
                                                 placeholder="+63 912 345 6789"
                                                 required
                                             />
-                                            <InputError message={errors[`beneficiaries.${index}.contact` as keyof typeof errors]} />
+                                            <InputError message={form.errors[`beneficiaries.${index}.contact` as keyof typeof form.errors]} />
                                         </Field>
 
                                         <Field>
                                             <FieldLabel>Date of Birth</FieldLabel>
                                             <Input
                                                 value={beneficiary.date_of_birth}
-                                                onChange={(e) => setData(`beneficiaries.${index}.date_of_birth` as any, e.target.value)}
+                                                onChange={(e) => form.setData(`beneficiaries.${index}.date_of_birth` as any, e.target.value)}
                                                 type="date"
                                                 required
                                             />
-                                            <InputError message={errors[`beneficiaries.${index}.date_of_birth` as keyof typeof errors]} />
+                                            <InputError message={form.errors[`beneficiaries.${index}.date_of_birth` as keyof typeof form.errors]} />
                                         </Field>
 
                                         <Field>
                                             <FieldLabel>Place of Birth</FieldLabel>
                                             <Input
                                                 value={beneficiary.place_of_birth}
-                                                onChange={(e) => setData(`beneficiaries.${index}.place_of_birth` as any, e.target.value)}
+                                                onChange={(e) => form.setData(`beneficiaries.${index}.place_of_birth` as any, e.target.value)}
                                                 type="text"
                                                 placeholder="City, Province"
                                                 required
                                             />
-                                            <InputError message={errors[`beneficiaries.${index}.place_of_birth` as keyof typeof errors]} />
+                                            <InputError message={form.errors[`beneficiaries.${index}.place_of_birth` as keyof typeof form.errors]} />
                                         </Field>
 
                                     </div>
@@ -250,12 +250,12 @@ export function InsuranceForm({ className }: InsuranceFormProps) {
                                 <Button type="button" variant="ghost" onClick={() => setStep(1)}>
                                     ← Back
                                 </Button>
-                                <Button type="submit" disabled={processing}>
-                                    {processing ? "Submitting…" : "Submit"}
+                                <Button type="submit" disabled={form.processing}>
+                                    {form.processing ? "Submitting…" : "Submit"}
                                 </Button>
                             </div>
                         </FieldGroup>
-                    </Form>
+                    </form>
                 </div>
             )}
         </div>

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CemeteryPlot;
 use App\Models\Insurance;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class SubscriptionController extends Controller
@@ -40,6 +42,7 @@ class SubscriptionController extends Controller
     {
         Gate::authorize('create', Subscription::class);
 
+
         $validated = $request->validate([
             'insurance' => 'required|exists:insurances,id',
             'beneficiaries' => 'array',
@@ -50,14 +53,31 @@ class SubscriptionController extends Controller
             'beneficiaries.*.place_of_birth' => 'required|string',
         ]);
 
-        $subscription = Insurance::get($validated['insurance'])->subscriptions()->create([
-            'member_id' => $request->user()->member->id,
-            'status' => 'pending',
-        ]);
 
-        if (! empty($validated['beneficiaries'])) {
-            $subscription->beneficiaries()->createMany($validated['beneficiaries']);
-        }
+        $subscription = DB::transaction(function () use ($validated, $request) {
+            $subscription = Insurance::find($validated['insurance'])->subscriptions()->create([
+                'member_id' => $request->user()->member->id,
+                'status' => 'pending',
+            ]);
+
+            if (! empty($validated['beneficiaries'])) {
+                foreach ($validated['beneficiaries'] as $beneficiaryData) {
+                    $beneficiary = $subscription->beneficiaries()->create($beneficiaryData);
+
+                    $availablePlot = CemeteryPlot::available()->lockForUpdate()->first();
+
+                    if ($availablePlot) {
+                        $availablePlot->update([
+                            'beneficiary_id' => $beneficiary->id,
+                            'status' => 'reserved',
+                        ]);
+                    }
+                }
+            }
+
+            return $subscription;
+        });
+
 
         return redirect()->route('members.welcome');
     }

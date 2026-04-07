@@ -28,7 +28,7 @@ class SubscriptionPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole(['member']) && ! is_null($user->member->subscription);
+        return $user->hasRole(['member']) && is_null($user->member->subscription);
     }
 
     /**

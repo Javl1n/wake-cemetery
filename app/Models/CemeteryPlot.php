@@ -13,6 +13,7 @@ class CemeteryPlot extends Model
     protected $fillable = [
         'section_id',
         'deceased_id',
+        'beneficiary_id',
         'plot_number',
         'latitude',
         'longitude',
@@ -40,6 +41,11 @@ class CemeteryPlot extends Model
         return $this->belongsTo(Deceased::class, 'deceased_id');
     }
 
+    public function beneficiary()
+    {
+        return $this->belongsTo(Beneficiary::class, 'beneficiary_id');
+    }
+
     public function scopeOccupied($query)
     {
         return $query->where('status', 'occupied')->whereNotNull('deceased_id');
@@ -48,5 +54,10 @@ class CemeteryPlot extends Model
     public function scopeAvailable($query)
     {
         return $query->where('status', 'available');
+    }
+
+    public function scopeReserved($query)
+    {
+        return $query->where('status', 'reserved')->whereNotNull('beneficiary_id');
     }
 }

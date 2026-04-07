@@ -50,4 +50,47 @@ class CemeterySectionFactory extends Factory
             'available_plots' => fake()->numberBetween(10, 45),
         ];
     }
+
+    public function withPolygon(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'geometry' => [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Polygon',
+                    'coordinates' => [[
+                        [120.984, 14.599],
+                        [120.985, 14.599],
+                        [120.985, 14.600],
+                        [120.984, 14.600],
+                        [120.984, 14.599],
+                    ]],
+                ],
+                'properties' => [
+                    'geometryType' => 'polygon',
+                ],
+            ],
+            'geometry_type' => 'polygon',
+        ]);
+    }
+
+    public function withLine(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'geometry' => [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'LineString',
+                    'coordinates' => [
+                        [120.984, 14.599],
+                        [120.985, 14.600],
+                    ],
+                ],
+                'properties' => [
+                    'geometryType' => 'line',
+                ],
+            ],
+            'geometry_type' => 'line',
+        ]);
+    }
 }

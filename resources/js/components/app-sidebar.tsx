@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Map, MapPin, MapPinHouseIcon } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Map, MapPin, MapPinHouseIcon, CalendarCheck } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -35,7 +35,15 @@ const cemeteryNavItems: NavItem[] = [
         icon: Map,
         href: '/cemetery-plots',
     },
-]
+];
+
+const wakeNavItems: NavItem[] = [
+    {
+        title: 'Wake Schedules',
+        icon: CalendarCheck,
+        href: '/wake-schedules',
+    },
+];
 
 const footerNavItems: NavItem[] = [
     // {
@@ -68,6 +76,7 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
                 <NavMain items={cemeteryNavItems} title='Cemetery' />
+                <NavMain items={wakeNavItems} title='Wake Services' />
             </SidebarContent>
 
             <SidebarFooter>

@@ -10,6 +10,21 @@ class WakePackage extends Model
     /** @use HasFactory<\Database\Factories\WakePackageFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+        'description',
+        'base_price',
+        'is_active',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'base_price' => 'decimal:2',
+            'is_active' => 'boolean',
+        ];
+    }
+
     public function schedules()
     {
         return $this->hasMany(WakeSchedule::class, 'package_id');
@@ -23,5 +38,10 @@ class WakePackage extends Model
     public function items()
     {
         return $this->belongsToMany(InventoryItem::class, 'item_package', 'package_id')->withPivot('quantity');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

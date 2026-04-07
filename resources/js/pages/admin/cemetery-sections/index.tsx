@@ -71,6 +71,10 @@ export default function CemeterySectionsIndex({
                     href="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css"
                     rel="stylesheet"
                 />
+                <link
+                    rel="stylesheet"
+                    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css"
+                />
             </Head>
 
             <div className="min-h-screen flex flex-col">
@@ -78,6 +82,9 @@ export default function CemeterySectionsIndex({
                 <div className="absolute inset-0">
                     <CemeteryMapContainer
                         plots={plots}
+                        sections={sections}
+                        showSectionBoundaries={true}
+                        selectedSection={selectedSection}
                         mapboxToken={mapboxToken}
                         center={centerCoordinates}
                         zoom={initialZoom}
@@ -242,6 +249,8 @@ export default function CemeterySectionsIndex({
                     section={selectedSectionForEdit || undefined}
                     open={showCreateForm}
                     onClose={handleCloseForm}
+                    mapboxToken={mapboxToken}
+                    centerCoordinates={centerCoordinates}
                 />
             </div>
         </AppLayout>

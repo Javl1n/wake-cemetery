@@ -12,18 +12,23 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { CemeterySection } from '@/types/cemetery';
+import type { CemeterySection, SectionGeometry } from '@/types/cemetery';
+import { SectionMapDrawer } from './section-map-drawer';
 
 interface SectionFormDialogProps {
     section?: CemeterySection;
     open: boolean;
     onClose: () => void;
+    mapboxToken: string;
+    centerCoordinates: { lat: number; lng: number };
 }
 
 export default function SectionFormDialog({
     section,
     open,
     onClose,
+    mapboxToken,
+    centerCoordinates,
 }: SectionFormDialogProps) {
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: section?.name || '',
@@ -32,6 +37,8 @@ export default function SectionFormDialog({
         color: section?.color || '#3b82f6',
         total_plots: section?.total_plots || 0,
         available_plots: section?.available_plots || 0,
+        geometry: section?.geometry || null,
+        geometry_type: section?.geometry_type || null,
     });
 
     const submit: FormEventHandler = (e) => {
@@ -56,7 +63,7 @@ export default function SectionFormDialog({
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[1200px]">
                 <DialogHeader>
                     <DialogTitle>
                         {section ? 'Edit Cemetery Section' : 'Create Cemetery Section'}
@@ -69,7 +76,8 @@ export default function SectionFormDialog({
                 </DialogHeader>
 
                 <form onSubmit={submit}>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid md:grid-cols-2 gap-6 py-4">
+                        <div className="space-y-4">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Section Name</Label>
                             <Input
@@ -177,6 +185,33 @@ export default function SectionFormDialog({
                                     </p>
                                 )}
                             </div>
+                        </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Section Boundary (Optional)</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Draw the section boundary on the map using polygon or line
+                                tools
+                            </p>
+                            <div className="h-[500px] rounded-lg overflow-hidden border">
+                                <SectionMapDrawer
+                                    mapboxToken={mapboxToken}
+                                    centerCoordinates={centerCoordinates}
+                                    initialGeometry={data.geometry}
+                                    sectionColor={data.color}
+                                    onGeometryChange={(geometry, type) => {
+                                        setData({
+                                            ...data,
+                                            geometry: geometry,
+                                            geometry_type: type,
+                                        });
+                                    }}
+                                />
+                            </div>
+                            {errors.geometry && (
+                                <p className="text-sm text-destructive">{errors.geometry}</p>
+                            )}
                         </div>
                     </div>
 

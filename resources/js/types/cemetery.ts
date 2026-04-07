@@ -1,3 +1,14 @@
+export interface SectionGeometry {
+    type: 'Feature';
+    geometry: {
+        type: 'Polygon' | 'LineString';
+        coordinates: number[][] | number[][][];
+    };
+    properties: {
+        geometryType: 'polygon' | 'line';
+    };
+}
+
 export interface CemeterySection {
     id: number;
     name: string;
@@ -6,6 +17,8 @@ export interface CemeterySection {
     description?: string;
     plots_count?: number;
     occupied_plots_count?: number;
+    geometry?: SectionGeometry | null;
+    geometry_type?: 'polygon' | 'line' | null;
 }
 
 export interface Deceased {

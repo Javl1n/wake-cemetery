@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class WakePackageSeeder extends Seeder
@@ -12,6 +11,29 @@ class WakePackageSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $packages = [
+            [
+                'name' => 'Basic Package',
+                'description' => 'Essential wake services including basic room rental and viewing arrangements',
+                'base_price' => 15000.00,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Premium Package',
+                'description' => 'Enhanced wake services with embalming, upgraded casket, and floral arrangements',
+                'base_price' => 35000.00,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Deluxe Package',
+                'description' => 'Complete wake services with all amenities, catering, and video tribute',
+                'base_price' => 50000.00,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($packages as $package) {
+            \App\Models\WakePackage::create($package);
+        }
     }
 }

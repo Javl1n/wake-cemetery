@@ -43,4 +43,9 @@ class Deceased extends Model
     {
         return $this->hasOne(CemeteryPlot::class, 'deceased_id');
     }
+
+    public function wakeSchedules()
+    {
+        return $this->hasMany(WakeSchedule::class, 'deceased_id');
+    }
 }

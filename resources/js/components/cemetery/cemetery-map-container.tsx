@@ -4,13 +4,18 @@ import Map, {
     Popup,
     NavigationControl,
     FullscreenControl,
+    Source,
+    Layer,
 } from 'react-map-gl/mapbox';
-import { CemeteryPlot, MapCoordinates } from '@/types/cemetery';
+import { CemeteryPlot, CemeterySection, MapCoordinates } from '@/types/cemetery';
 import { MapPin } from 'lucide-react';
 import PlotDetailPopup from './plot-detail-popup';
 
 interface CemeteryMapContainerProps {
     plots: CemeteryPlot[];
+    sections?: CemeterySection[];
+    showSectionBoundaries?: boolean;
+    selectedSection?: CemeterySection | null;
     mapboxToken: string;
     center: MapCoordinates;
     zoom: number;
@@ -20,6 +25,9 @@ interface CemeteryMapContainerProps {
 
 export default function CemeteryMapContainer({
     plots,
+    sections = [],
+    showSectionBoundaries = false,
+    selectedSection = null,
     mapboxToken,
     center,
     zoom,
@@ -57,6 +65,59 @@ export default function CemeteryMapContainer({
                 {/* Navigation Controls */}
                 <NavigationControl position="top-right" />
                 <FullscreenControl position="top-right" />
+
+                {/* Section Boundaries */}
+                {showSectionBoundaries && sections.length > 0 && (
+                    <Source
+                        id="section-boundaries"
+                        type="geojson"
+                        data={{
+                            type: 'FeatureCollection',
+                            features: sections
+                                .filter((s) => s.geometry)
+                                .map((section) => ({
+                                    ...section.geometry!,
+                                    id: section.id,
+                                    properties: {
+                                        ...section.geometry!.properties,
+                                        sectionId: section.id,
+                                        name: section.name,
+                                        code: section.code,
+                                        color: section.color,
+                                    },
+                                })),
+                        }}
+                    >
+                        <Layer
+                            id="section-boundaries-fill"
+                            type="fill"
+                            paint={{
+                                'fill-color': ['get', 'color'],
+                                'fill-opacity': [
+                                    'case',
+                                    ['==', ['get', 'sectionId'], selectedSection?.id || -1],
+                                    0.3,
+                                    0.1,
+                                ],
+                            }}
+                            filter={['==', ['get', 'geometryType'], 'polygon']}
+                        />
+                        <Layer
+                            id="section-boundaries-line"
+                            type="line"
+                            paint={{
+                                'line-color': ['get', 'color'],
+                                'line-width': [
+                                    'case',
+                                    ['==', ['get', 'sectionId'], selectedSection?.id || -1],
+                                    3,
+                                    2,
+                                ],
+                                'line-opacity': 0.8,
+                            }}
+                        />
+                    </Source>
+                )}
 
                 {/* Plot Markers */}
                 {plots.map((plot) => (

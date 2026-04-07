@@ -27,4 +27,9 @@ class Beneficiary extends Model
     {
         return $this->hasOne(Deceased::class, 'deceased_id');
     }
+
+    public function reservedPlot()
+    {
+        return $this->hasOne(CemeteryPlot::class, 'beneficiary_id');
+    }
 }

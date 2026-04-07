@@ -45,6 +45,10 @@ Route::name('cemetery.')->prefix('cemetery')->controller(CemeteryMapController::
 Route::middleware(['auth', 'verified', 'role:admin,staff'])->group(function () {
     Route::resource('cemetery-sections', App\Http\Controllers\CemeterySectionController::class)->except(['show', 'create', 'edit']);
     Route::resource('cemetery-plots', App\Http\Controllers\CemeteryPlotController::class)->except(['show', 'create', 'edit']);
+
+    Route::resource('wake-schedules', App\Http\Controllers\WakeScheduleController::class)->except(['show', 'create', 'edit']);
+    Route::post('wake-schedules/{wakeSchedule}/complete', [App\Http\Controllers\WakeScheduleController::class, 'complete'])->name('wake-schedules.complete');
+    Route::post('wake-schedules/check-availability', [App\Http\Controllers\WakeScheduleController::class, 'checkAvailability'])->name('wake-schedules.check-availability');
 });
 
 // Route::name('subscription.')->prefix('/subscriptions')->group(function () {

@@ -4,12 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use PDO;
 
 class Subscription extends Model
 {
     /** @use HasFactory<\Database\Factories\SubscriptionFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'member_id',
+        'insurance_id',
+        'status',
+        'reviewer_id',
+        'reviewed_at',
+    ];
 
     public function member()
     {
