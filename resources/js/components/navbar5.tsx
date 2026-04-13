@@ -110,10 +110,10 @@ const Navbar5 = ({ className }: Navbar5Props) => {
             <NavigationMenuList>
                 <NavigationMenuItem>
                     <NavigationMenuLink
-                        href="/"
+                        href="/member/dashboard"
                         className={cn(
                             navigationMenuTriggerStyle(),
-                            isActive("/") && "bg-primary text-secondary font-medium"
+                            isActive("/member/dashboard") && "bg-primary text-secondary font-medium"
                         )}
                         >
                         Home
@@ -144,10 +144,24 @@ const Navbar5 = ({ className }: Navbar5Props) => {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink
-                  href="#"
-                  className={navigationMenuTriggerStyle()}
+                  href="/cemetery/map"
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    isActive("/cemetery/map") && "bg-primary text-secondary font-medium"
+                  )}
                 >
                   Cemetery Map
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  href="/member/wake-schedules"
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    isActive("/member/wake-schedules") && "bg-primary text-secondary font-medium"
+                  )}
+                >
+                  Wake Schedules
                 </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
@@ -177,7 +191,7 @@ const Navbar5 = ({ className }: Navbar5Props) => {
                                 <DropdownMenuItem>Purchase History</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem>Account Settings</DropdownMenuItem>
-                                <DropdownMenuItem>Log out</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.post('/logout')}>Log out</DropdownMenuItem>
                             </DropdownMenuGroup>
                         </DropdownMenuContent>
                     </DropdownMenu>

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Map, MapPin, MapPinHouseIcon, CalendarCheck } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Map, MapPin, MapPinHouseIcon, CalendarCheck, Package } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -42,6 +42,11 @@ const wakeNavItems: NavItem[] = [
         title: 'Wake Schedules',
         icon: CalendarCheck,
         href: '/wake-schedules',
+    },
+    {
+        title: 'Inventory',
+        icon: Package,
+        href: '/inventory-items',
     },
 ];
 

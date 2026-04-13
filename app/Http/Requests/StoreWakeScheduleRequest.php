@@ -23,7 +23,9 @@ class StoreWakeScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'deceased_id' => 'required|exists:deceaseds,id',
+            'beneficiary_id' => 'required|exists:beneficiaries,id',
+            'date_of_death' => 'required|date|before_or_equal:today',
+            'cause_of_death' => 'nullable|string|max:255',
             'room_id' => 'required|exists:wake_rooms,id',
             'package_id' => 'required|exists:wake_packages,id',
             'date_start' => 'required|date|after_or_equal:today',

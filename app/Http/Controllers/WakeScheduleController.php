@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreWakeScheduleRequest;
 use App\Http\Requests\UpdateWakeScheduleRequest;
+use App\Models\Beneficiary;
 use App\Models\CemeteryPlot;
 use App\Models\Deceased;
 use App\Models\InsuranceClaim;
@@ -39,8 +40,8 @@ class WakeScheduleController extends Controller
         $packages = WakePackage::active()->with(['services', 'items'])->get();
         $services = WakeService::all();
         $inventoryItems = InventoryItem::where('available', true)->get();
-        $deceaseds = Deceased::with(['member.user', 'beneficiary'])
-            ->whereDoesntHave('cemeteryPlot')
+        $beneficiaries = \App\Models\Beneficiary::with('subscription')
+            ->whereDoesntHave('deceased')
             ->latest()
             ->get();
 
@@ -50,7 +51,7 @@ class WakeScheduleController extends Controller
             'packages' => $packages,
             'services' => $services,
             'inventoryItems' => $inventoryItems,
-            'deceaseds' => $deceaseds,
+            'beneficiaries' => $beneficiaries,
         ]);
     }
 
@@ -60,8 +61,17 @@ class WakeScheduleController extends Controller
     public function store(StoreWakeScheduleRequest $request)
     {
         $schedule = DB::transaction(function () use ($request) {
+            $beneficiary = Beneficiary::with(['subscription.member'])->find($request->beneficiary_id);
+            // Create deceased record for the beneficiary
+            $deceased = Deceased::create([
+                'member_id' => $beneficiary->subscription->member->id,
+                'beneficiary_id' => $beneficiary->id,
+                'date_of_death' => $request->date_of_death,
+                'cause_of_death' => $request->cause_of_death,
+            ]);
+
             $schedule = WakeSchedule::create([
-                'deceased_id' => $request->deceased_id,
+                'deceased_id' => $deceased->id,
                 'room_id' => $request->room_id,
                 'package_id' => $request->package_id,
                 'date_start' => $request->date_start,
@@ -113,9 +123,9 @@ class WakeScheduleController extends Controller
             $schedule->refresh();
             $schedule->update(['total_amount' => $schedule->calculateTotal()]);
 
-            if ($request->create_claim && $request->subscription_id) {
+            if ($request->create_claim) {
                 InsuranceClaim::create([
-                    'subscription_id' => $request->subscription_id,
+                    'subscription_id' => $beneficiary->subscription->id,
                     'schedule_id' => $schedule->id,
                     'status' => 'pending',
                     'filed_at' => now(),
@@ -137,7 +147,6 @@ class WakeScheduleController extends Controller
 
         DB::transaction(function () use ($request, $wakeSchedule) {
             $wakeSchedule->update($request->only([
-                'deceased_id',
                 'room_id',
                 'package_id',
                 'date_start',
@@ -186,7 +195,7 @@ class WakeScheduleController extends Controller
         DB::transaction(function () use ($wakeSchedule) {
             $wakeSchedule->update([
                 'status' => 'completed',
-                'approved_by' => auth()->id(),
+                'approved_by' => auth()->user->id,
                 'approved_at' => now(),
             ]);
 
@@ -213,6 +222,27 @@ class WakeScheduleController extends Controller
         });
 
         return redirect()->route('wake-schedules.index');
+    }
+
+    /**
+     * Toggle a service's completion status on a wake schedule.
+     */
+    public function completeService(WakeSchedule $wakeSchedule, WakeService $wakeService)
+    {
+        Gate::authorize('update', $wakeSchedule);
+
+        $currentStatus = $wakeSchedule->services()
+            ->where('service_id', $wakeService->id)
+            ->first()
+            ?->pivot
+            ->status;
+
+        $wakeSchedule->services()->updateExistingPivot($wakeService->id, [
+            'status' => $currentStatus === 'completed' ? 'pending' : 'completed',
+            'completed_at' => $currentStatus === 'completed' ? null : now(),
+        ]);
+
+        return redirect()->back();
     }
 
     /**

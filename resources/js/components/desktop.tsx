@@ -1,19 +1,19 @@
 import {
-	NavigationMenu,
-	NavigationMenuContent,
-	NavigationMenuItem,
-	NavigationMenuLink,
-	NavigationMenuList,
-	NavigationMenuTrigger,
+    NavigationMenu,
+    NavigationMenuContent,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+    NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 // import { companyLinks, companyLinks2, productLinks } from "@/components/nav-links";
 // import { LinkItem } from "@/components/sheard";
 
 export function DesktopNav() {
-	return (
-		<NavigationMenu className="hidden md:flex">
-			<NavigationMenuList>
-				{/* <NavigationMenuItem className="bg-transparent">
+    return (
+        <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+                {/* <NavigationMenuItem className="bg-transparent">
 					<NavigationMenuTrigger className="bg-transparent">
 						Product
 					</NavigationMenuTrigger>
@@ -66,26 +66,31 @@ export function DesktopNav() {
 					</NavigationMenuContent>
 				</NavigationMenuItem> */}
                 <NavigationMenuLink asChild className="px-4">
-					<a className="rounded-md p-2 hover:bg-accent" href="#">
-						Home
-					</a>
-				</NavigationMenuLink>
+                    <a className="rounded-md p-2 hover:bg-accent" href="#">
+                        Home
+                    </a>
+                </NavigationMenuLink>
                 <NavigationMenuLink asChild className="px-4">
-					<a className="rounded-md p-2 hover:bg-accent" href="#">
-						Cemetery Mapping
-					</a>
-				</NavigationMenuLink>
-				<NavigationMenuLink asChild className="px-4">
-					<a className="rounded-md p-2 hover:bg-accent" href="#">
-						Obituary & Memorial Services
-					</a>
-				</NavigationMenuLink>
+                    <a className="rounded-md p-2 hover:bg-accent" href="/cemetery/map">
+                        Cemetery Mapping
+                    </a>
+                </NavigationMenuLink>
                 <NavigationMenuLink asChild className="px-4">
-					<a className="rounded-md p-2 hover:bg-accent" href="#">
-						Pricing
-					</a>
-				</NavigationMenuLink>
-			</NavigationMenuList>
-		</NavigationMenu>
-	);
+                    <a className="rounded-md p-2 hover:bg-accent" href="/wake-schedules">
+                        Wake Services
+                    </a>
+                </NavigationMenuLink>
+                <NavigationMenuLink asChild className="px-4">
+                    <a className="rounded-md p-2 hover:bg-accent" href="#">
+                        Obituary & Memorial Services
+                    </a>
+                </NavigationMenuLink>
+                <NavigationMenuLink asChild className="px-4">
+                    <a className="rounded-md p-2 hover:bg-accent" href="#">
+                        Pricing
+                    </a>
+                </NavigationMenuLink>
+            </NavigationMenuList>
+        </NavigationMenu>
+    );
 }

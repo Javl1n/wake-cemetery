@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,24 +10,22 @@ import {
     DrawerContent,
     DrawerTrigger,
 } from '@/components/ui/drawer';
-import { Menu, Plus, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Menu, Plus, Calendar } from 'lucide-react';
 import type { WakeSchedule, WakeRoom, WakePackage, WakeService, InventoryItem } from '@/types/wake';
 import AppLayout from '@/layouts/app-layout';
 import { format } from 'date-fns';
-import ScheduleFormDialog from '@/components/wake/admin/schedule-form-dialog';
+import CreateScheduleDialog from '@/components/wake/admin/create-schedule-dialog';
+import EditScheduleDialog from '@/components/wake/admin/edit-schedule-dialog';
+import WakeCalendar from '@/components/wake/admin/wake-calendar';
+import ScheduleDetailSheet from '@/components/wake/admin/schedule-detail-sheet';
 
-interface Deceased {
+interface Beneficiary {
     id: number;
-    date_of_death: string;
-    member?: {
+    name: string;
+    relationship: string;
+    contact: string;
+    subscription?: {
         id: number;
-        user: {
-            name: string;
-        };
-    };
-    beneficiary?: {
-        id: number;
-        name: string;
     };
 }
 
@@ -37,7 +35,7 @@ interface WakeSchedulesPageProps {
     packages: WakePackage[];
     services: WakeService[];
     inventoryItems: InventoryItem[];
-    deceaseds: Deceased[];
+    beneficiaries: Beneficiary[];
 }
 
 const statusColors = {
@@ -54,7 +52,7 @@ export default function WakeSchedulesIndex({
     packages,
     services,
     inventoryItems,
-    deceaseds,
+    beneficiaries,
 }: WakeSchedulesPageProps) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -77,23 +75,8 @@ export default function WakeSchedulesIndex({
         });
     }, [schedules, searchQuery, filterStatus, filterRoom]);
 
-    const handleComplete = (schedule: WakeSchedule, e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (confirm(`Mark this wake schedule as completed and assign cemetery plot?`)) {
-            router.post(`/wake-schedules/${schedule.id}/complete`);
-        }
-    };
-
-    const handleCancel = (schedule: WakeSchedule, e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (confirm(`Are you sure you want to cancel this wake schedule?`)) {
-            router.delete(`/wake-schedules/${schedule.id}`);
-        }
-    };
-
     const handleCloseForm = () => {
         setShowCreateForm(false);
-        setSelectedSchedule(null);
     };
 
     const getDeceasedName = (schedule: WakeSchedule) => {
@@ -108,9 +91,8 @@ export default function WakeSchedulesIndex({
 
     const ScheduleCard = ({ schedule }: { schedule: WakeSchedule }) => (
         <Card
-            className={`cursor-pointer hover:shadow-lg transition-shadow ${
-                selectedSchedule?.id === schedule.id ? 'ring-2 ring-primary' : ''
-            }`}
+            className={`cursor-pointer hover:shadow-lg transition-shadow ${selectedSchedule?.id === schedule.id ? 'ring-2 ring-primary' : ''
+                }`}
             onClick={() => setSelectedSchedule(schedule)}
         >
             <CardContent className="p-4">
@@ -141,30 +123,6 @@ export default function WakeSchedulesIndex({
                         </div>
                     </div>
 
-                    <div className="flex gap-2 pt-2">
-                        {schedule.status === 'in_progress' && (
-                            <Button
-                                size="sm"
-                                variant="default"
-                                className="flex-1"
-                                onClick={(e) => handleComplete(schedule, e)}
-                            >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Complete
-                            </Button>
-                        )}
-                        {schedule.status !== 'completed' && schedule.status !== 'cancelled' && (
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                className="flex-1"
-                                onClick={(e) => handleCancel(schedule, e)}
-                            >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Cancel
-                            </Button>
-                        )}
-                    </div>
                 </div>
             </CardContent>
         </Card>
@@ -256,48 +214,71 @@ export default function WakeSchedulesIndex({
         <AppLayout>
             <Head title="Wake Schedules" />
 
-            <div className="min-h-screen flex flex-col bg-muted/30">
-                {/* Calendar/Timeline Background - Placeholder */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-muted-foreground">
-                        <Calendar className="h-24 w-24 mx-auto mb-4 opacity-20" />
-                        <p className="text-lg">Calendar View Coming Soon</p>
-                    </div>
-                </div>
-
-                {/* Floating Control Panel - Desktop */}
-                <div className="hidden md:block absolute top-4 left-4 z-10 w-96 max-h-[calc(100vh-2rem)]">
+            <div className="min-h-screen bg-muted/30 p-4">
+                {/* Desktop: control panel + calendar side by side */}
+                <div className="hidden md:grid md:grid-cols-[320px_1fr] gap-4 items-start">
                     <ControlPanel />
+                    <WakeCalendar
+                        schedules={filteredSchedules}
+                        selectedSchedule={selectedSchedule}
+                        onSelectSchedule={setSelectedSchedule}
+                    />
                 </div>
 
-                {/* Mobile Drawer */}
-                <div className="md:hidden fixed top-4 left-4 z-10">
-                    <Drawer open={open} onOpenChange={setOpen}>
-                        <DrawerTrigger asChild>
-                            <Button size="icon" variant="outline" className="shadow-lg">
-                                <Menu className="h-5 w-5" />
-                            </Button>
-                        </DrawerTrigger>
-                        <DrawerContent>
-                            <div className="p-4 pb-8">
-                                <ControlPanel />
-                            </div>
-                        </DrawerContent>
-                    </Drawer>
+                {/* Mobile: drawer + calendar stacked */}
+                <div className="md:hidden space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Drawer open={open} onOpenChange={setOpen}>
+                            <DrawerTrigger asChild>
+                                <Button size="sm" variant="outline" className="shadow-sm">
+                                    <Menu className="h-4 w-4 mr-1" />
+                                    Schedules
+                                </Button>
+                            </DrawerTrigger>
+                            <DrawerContent>
+                                <div className="p-4 pb-8">
+                                    <ControlPanel />
+                                </div>
+                            </DrawerContent>
+                        </Drawer>
+                    </div>
+                    <WakeCalendar
+                        schedules={filteredSchedules}
+                        selectedSchedule={selectedSchedule}
+                        onSelectSchedule={setSelectedSchedule}
+                    />
                 </div>
             </div>
 
-            {/* Form Dialog */}
-            <ScheduleFormDialog
+            {/* Detail Sheet */}
+            <ScheduleDetailSheet
                 schedule={selectedSchedule}
-                open={showCreateForm}
+                onClose={() => setSelectedSchedule(null)}
+                onEdit={() => setShowCreateForm(true)}
+            />
+
+            {/* Create Dialog */}
+            <CreateScheduleDialog
+                open={showCreateForm && !selectedSchedule}
                 onClose={handleCloseForm}
                 rooms={rooms}
                 packages={packages}
                 services={services}
                 inventoryItems={inventoryItems}
-                deceaseds={deceaseds}
+                beneficiaries={beneficiaries}
             />
+
+            {/* Edit Dialog */}
+            {selectedSchedule && (
+                <EditScheduleDialog
+                    schedule={selectedSchedule}
+                    open={showCreateForm && !!selectedSchedule}
+                    onClose={handleCloseForm}
+                    rooms={rooms}
+                    packages={packages}
+                    services={services}
+                />
+            )}
         </AppLayout>
     );
 }

@@ -10,6 +10,8 @@ class InventoryCategory extends Model
     /** @use HasFactory<\Database\Factories\InventoryCategoryFactory> */
     use HasFactory;
 
+    protected $fillable = ['name'];
+
     public function items()
     {
         return $this->hasMany(InventoryItem::class, 'category_id');

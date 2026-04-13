@@ -23,7 +23,6 @@ class UpdateWakeScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'deceased_id' => 'sometimes|required|exists:deceaseds,id',
             'room_id' => 'sometimes|required|exists:wake_rooms,id',
             'package_id' => 'sometimes|required|exists:wake_packages,id',
             'date_start' => 'sometimes|required|date',

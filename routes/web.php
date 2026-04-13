@@ -30,6 +30,11 @@ Route::name('members.')->prefix('/member')->controller(MemberController::class)-
     Route::post('/', 'store')->name('store')->middleware(['role:member']);
 });
 
+Route::middleware(['auth', 'verified', 'role:member'])->prefix('/member')->name('members.')->group(function () {
+    Route::get('/wake-schedules', [App\Http\Controllers\MemberWakeScheduleController::class, 'index'])->name('wake-schedules.index');
+    Route::post('/wake-schedules/{wakeSchedule}/orders', [App\Http\Controllers\MemberWakeScheduleController::class, 'storeOrder'])->name('wake-schedules.orders.store');
+});
+
 Route::name('subscriptions.')->prefix('/subscription')->controller(SubscriptionController::class)->group(function () {
     Route::get('/register', 'create')->name('create')->middleware(['auth', 'member-verified']);
     Route::post('/', 'store')->name('store')->middleware(['auth', 'member-verified']);
@@ -46,8 +51,11 @@ Route::middleware(['auth', 'verified', 'role:admin,staff'])->group(function () {
     Route::resource('cemetery-sections', App\Http\Controllers\CemeterySectionController::class)->except(['show', 'create', 'edit']);
     Route::resource('cemetery-plots', App\Http\Controllers\CemeteryPlotController::class)->except(['show', 'create', 'edit']);
 
+    Route::resource('inventory-items', App\Http\Controllers\InventoryItemController::class)->except(['show', 'create', 'edit']);
+
     Route::resource('wake-schedules', App\Http\Controllers\WakeScheduleController::class)->except(['show', 'create', 'edit']);
     Route::post('wake-schedules/{wakeSchedule}/complete', [App\Http\Controllers\WakeScheduleController::class, 'complete'])->name('wake-schedules.complete');
+    Route::patch('wake-schedules/{wakeSchedule}/services/{wakeService}/complete', [App\Http\Controllers\WakeScheduleController::class, 'completeService'])->name('wake-schedules.services.complete');
     Route::post('wake-schedules/check-availability', [App\Http\Controllers\WakeScheduleController::class, 'checkAvailability'])->name('wake-schedules.check-availability');
 });
 

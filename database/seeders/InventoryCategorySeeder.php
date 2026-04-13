@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\InventoryCategory;
 use Illuminate\Database\Seeder;
 
 class InventoryCategorySeeder extends Seeder
@@ -12,6 +12,19 @@ class InventoryCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $categories = [
+            'Caskets & Urns',
+            'Embalming Supplies',
+            'Floral Arrangements',
+            'Funeral Attire',
+            'Catering & Reception',
+            'Memorial Stationery',
+            'Lighting & Candles',
+            'Audio & Visual Equipment',
+        ];
+
+        foreach ($categories as $name) {
+            InventoryCategory::create(['name' => $name]);
+        }
     }
 }

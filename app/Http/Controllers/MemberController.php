@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Insurance;
 use App\Models\Member;
+use App\Models\WakeSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -31,9 +32,37 @@ class MemberController extends Controller
     /**
      * Show the member dashboard.
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        return inertia()->render('members/dashboard');
+        $user = $request->user()->load([
+            'member.subscription.insurance',
+            'member.subscription.beneficiaries',
+            'member.subscription.claims',
+            'member.verification',
+        ]);
+
+        $member = $user->member;
+
+        $wakeScheduleCount = $member
+            ? WakeSchedule::whereHas('deceased', fn ($q) => $q->where('member_id', $member->id))->count()
+            : 0;
+
+        $activeWakeSchedule = $member
+            ? WakeSchedule::with(['deceased.beneficiary', 'room', 'package'])
+                ->whereHas('deceased', fn ($q) => $q->where('member_id', $member->id))
+                ->whereIn('status', ['confirmed', 'in_progress'])
+                ->latest()
+                ->first()
+            : null;
+
+        return inertia()->render('members/dashboard', [
+            'member' => $member,
+            'subscription' => $member?->subscription,
+            'beneficiaries' => $member?->subscription?->beneficiaries ?? [],
+            'claims' => $member?->subscription?->claims ?? [],
+            'wakeScheduleCount' => $wakeScheduleCount,
+            'activeWakeSchedule' => $activeWakeSchedule,
+        ]);
     }
 
     /**

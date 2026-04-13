@@ -32,12 +32,12 @@ class WakePackage extends Model
 
     public function services()
     {
-        return $this->belongsToMany(WakeService::class, 'package_service', 'package_id');
+        return $this->belongsToMany(WakeService::class, 'package_service', 'package_id', 'service_id');
     }
 
     public function items()
     {
-        return $this->belongsToMany(InventoryItem::class, 'item_package', 'package_id')->withPivot('quantity');
+        return $this->belongsToMany(InventoryItem::class, 'item_package', 'package_id', 'item_id')->withPivot('quantity');
     }
 
     public function scopeActive($query)

@@ -13,9 +13,9 @@ class EnsureUserRole
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!$request->user()->hasRole([$role])) {
+        if (! $request->user()->hasRole($roles)) {
             abort(403);
         }
 

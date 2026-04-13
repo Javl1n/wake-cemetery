@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('schedule_id')->constrained('wake_schedules');
             $table->foreignId('service_id')->constrained('wake_services');
             $table->enum('status', ['pending', 'completed', 'cancelled']);
-            $table->timestamp('completed_at');
+            $table->timestamp('completed_at')->nullable();
             $table->float('fee');
             $table->timestamps();
         });

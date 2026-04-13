@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test Member',
             'email' => 'member@gmail.com',
             'password' => 'password',
-            'role' => 'member'
+            'role' => 'member',
         ])->has(Member::factory()->count(1))
             ->create();
 
@@ -39,12 +39,19 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::factory(10, [
-            'role' => 'staff'
+            'role' => 'staff',
         ])->create();
 
         $this->call([
             MemberSeeder::class,
+            WakePackageSeeder::class,
+            WakeServiceSeeder::class,
             InsuranceSeeder::class,
+            SubscriptionSeeder::class,
+            BeneficiarySeeder::class,
+            WakeRoomSeeder::class,
+            InventoryCategorySeeder::class,
+            InventoryItemSeeder::class,
         ]);
     }
 }

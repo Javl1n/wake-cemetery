@@ -1,3 +1,11 @@
+export interface InventoryCategory {
+    id: number;
+    name: string;
+    created_at: string;
+    updated_at: string;
+    items?: InventoryItem[];
+}
+
 export interface WakeRoom {
     id: number;
     code: string;
@@ -120,6 +128,9 @@ export interface WakeSchedule {
             name: string;
             relationship: string;
             contact: string;
+            subscription: {
+                id: number
+            }
         };
     };
     room: WakeRoom;

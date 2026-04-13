@@ -108,27 +108,30 @@ export default function MemberWelcome() {
             <Head title="Member Services" />
 
             <div className='min-h-screen flex flex-col'>
-                <header className={cn("sticky top-0 z-50 w-full border-transparent border-b", {"border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/50":
-                            scroll,})}>
+                <header className={cn("sticky top-0 z-50 w-full border-transparent border-b", {
+                    "border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/50":
+                        scroll,
+                })}>
                     <nav className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
                         <div className="flex items-center gap-5">
                             <a
                                 className="px-3 py-2.5"
                                 href="#"
-                            > <img
-                                src="/system/logo.png"
-                                className="max-h-13"
-                                alt="St. luiz Logo"
+                            >
+                                <img
+                                    src="/system/logo.png"
+                                    className="max-h-13"
+                                    alt="St. luiz Logo"
                                 />
                             </a>
-                                <DesktopNav />
+                            <DesktopNav />
                         </div>
-                         <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4">
                             {/* Desktop User Dropdown */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="default" size="icon" className="hidden md:flex rounded-full">
-                                        <User className="h-5 w-5"/>
+                                        <User className="h-5 w-5" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-56" align="end">
@@ -175,7 +178,7 @@ export default function MemberWelcome() {
                                 pulsating={false}
                                 fadeDistance={1}
                                 saturation={1}
-                                />
+                            />
                         </div>
                         <section className="flex-1  flex flex-col mx-auto w-full max-w-5xl overflow-hidden pt-16">
                             <div

@@ -11,7 +11,7 @@ class StoreInventoryItemRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('create', \App\Models\InventoryItem::class);
     }
 
     /**
@@ -22,7 +22,14 @@ class StoreInventoryItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'category_id' => ['required', 'exists:inventory_categories,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
+            'unit' => ['required', 'string', 'max:50'],
+            'available' => ['boolean'],
+            'image' => ['nullable', 'image', 'max:2048'],
         ];
     }
 }
