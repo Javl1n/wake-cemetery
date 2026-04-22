@@ -132,7 +132,7 @@ export default function InventoryIndex({ items, categories }: Props) {
                 ) : (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {filteredItems.map((item) => (
-                            <Card key={item.id} className="relative overflow-hidden pt-0">
+                            <Card key={item.id} className="relative flex flex-col overflow-hidden pt-0">
                                 {item.image ? (
                                     <img
                                         src={`/storage/${item.image}`}
@@ -144,33 +144,35 @@ export default function InventoryIndex({ items, categories }: Props) {
                                         <ImageOff className="h-8 w-8 text-muted-foreground/40" />
                                     </div>
                                 )}
-                                <CardContent className="p-4">
-                                    <div className="mb-3 flex items-start justify-between gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate font-medium">{item.name}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {categoryName(item.category_id)}
-                                            </p>
+                                <CardContent className="flex flex-1 flex-col justify-between p-4">
+                                    <div>
+                                        <div className="mb-3 flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate font-medium">{item.name}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {categoryName(item.category_id)}
+                                                </p>
+                                            </div>
+                                            <Badge
+                                                variant={item.available ? 'default' : 'secondary'}
+                                                className="shrink-0 text-xs"
+                                            >
+                                                {item.available ? 'Available' : 'Unavailable'}
+                                            </Badge>
                                         </div>
-                                        <Badge
-                                            variant={item.available ? 'default' : 'secondary'}
-                                            className="shrink-0 text-xs"
-                                        >
-                                            {item.available ? 'Available' : 'Unavailable'}
-                                        </Badge>
-                                    </div>
 
-                                    <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
-                                        {item.description}
-                                    </p>
+                                        <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
+                                            {item.description}
+                                        </p>
 
-                                    <div className="mb-4 flex items-center justify-between text-sm">
-                                        <span className="font-semibold">
-                                            ₱{parseFloat(item.price.toString()).toLocaleString()}
-                                        </span>
-                                        <span className="text-muted-foreground">
-                                            {item.stock} {item.unit}
-                                        </span>
+                                        <div className="mb-4 flex items-center justify-between text-sm">
+                                            <span className="font-semibold">
+                                                ₱{parseFloat(item.price.toString()).toLocaleString()}
+                                            </span>
+                                            <span className="text-muted-foreground">
+                                                {item.stock} {item.unit}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div className="flex gap-2">

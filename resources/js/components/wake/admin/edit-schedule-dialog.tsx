@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import type { WakeSchedule, WakePackage, WakeRoom, WakeService } from '@/types/wake';
 
@@ -233,7 +234,8 @@ export default function EditScheduleDialog({ schedule, open, onClose, rooms, pac
                                     Services included in the selected package are checked by default.
                                 </p>
                             </div>
-                            <div className="grid gap-3 p-4 border rounded-lg bg-muted/50">
+                            <ScrollArea className="h-64 rounded-lg border bg-muted/50">
+                            <div className="grid gap-3 p-4">
                                 {services.map((service) => {
                                     const inPackage = selectedPackage?.services?.some((s) => s.id === service.id);
                                     const existing = schedule.services?.find((s) => s.id === service.id);
@@ -276,6 +278,7 @@ export default function EditScheduleDialog({ schedule, open, onClose, rooms, pac
                                     );
                                 })}
                             </div>
+                            </ScrollArea>
                             {errors.services && (
                                 <p className="text-sm text-destructive">{errors.services}</p>
                             )}

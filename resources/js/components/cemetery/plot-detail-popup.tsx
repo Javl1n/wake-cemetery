@@ -1,11 +1,21 @@
-import { CemeteryPlot } from '@/types/cemetery';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { CemeteryPlot } from '@/types/cemetery';
 
 interface PlotDetailPopupProps {
     plot: CemeteryPlot;
+    showAdminActions?: boolean;
+    onFlagMaintenance?: (plot: CemeteryPlot) => void;
+    onResolveMaintenance?: (plot: CemeteryPlot) => void;
 }
 
-export default function PlotDetailPopup({ plot }: PlotDetailPopupProps) {
+export default function PlotDetailPopup({
+    plot,
+    showAdminActions = false,
+    onFlagMaintenance,
+    onResolveMaintenance,
+}: PlotDetailPopupProps) {
     return (
         <div className="p-2 min-w-[250px]">
             <h3 className="font-bold text-lg mb-2">{plot.plot_number}</h3>
@@ -50,6 +60,40 @@ export default function PlotDetailPopup({ plot }: PlotDetailPopupProps) {
                         {plot.status}
                     </span>
                 </div>
+
+                {showAdminActions && (
+                    <>
+                        <Separator />
+                        {plot.status === 'maintenance' ? (
+                            <div className="space-y-2">
+                                {plot.notes && (
+                                    <div className="text-xs text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950 rounded p-2">
+                                        {plot.notes}
+                                    </div>
+                                )}
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
+                                    onClick={() => onResolveMaintenance?.(plot)}
+                                >
+                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                    Resolve Maintenance
+                                </Button>
+                            </div>
+                        ) : (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full border-orange-400 text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950"
+                                onClick={() => onFlagMaintenance?.(plot)}
+                            >
+                                <AlertTriangle className="h-4 w-4 mr-2" />
+                                Flag for Maintenance
+                            </Button>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

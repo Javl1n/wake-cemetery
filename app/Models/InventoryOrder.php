@@ -31,7 +31,7 @@ class InventoryOrder extends Model
 
     public function items()
     {
-        return $this->belongsToMany(InventoryItem::class, 'item_order', 'order_id')->withPivot('unit_price', 'quantity', 'notes');
+        return $this->belongsToMany(InventoryItem::class, 'item_order', 'order_id', 'item_id')->withPivot('unit_price', 'quantity', 'notes');
     }
 
     public function calculateAmount(): float

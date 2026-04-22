@@ -15,6 +15,8 @@ export interface CemeterySection {
     code: string;
     color: string;
     description?: string;
+    total_plots?: number;
+    available_plots?: number;
     plots_count?: number;
     occupied_plots_count?: number;
     geometry?: SectionGeometry | null;
@@ -35,6 +37,7 @@ export interface CemeteryPlot {
     longitude: number;
     status: 'available' | 'occupied' | 'reserved' | 'maintenance';
     burial_date: string | null;
+    notes: string | null;
     section: {
         id: number;
         name: string;
@@ -42,6 +45,7 @@ export interface CemeteryPlot {
         color: string;
     };
     deceased: Deceased | null;
+    beneficiary?: { id: number; name: string } | null;
 }
 
 export interface MapCoordinates {
@@ -51,8 +55,12 @@ export interface MapCoordinates {
 
 export interface CemeteryMapPageProps {
     sections: CemeterySection[];
-    plots: CemeteryPlot[];
     mapboxToken: string;
     centerCoordinates: MapCoordinates;
     initialZoom: number;
+}
+
+export interface CemeterySectionPageProps {
+    section: CemeterySection;
+    plots: CemeteryPlot[];
 }

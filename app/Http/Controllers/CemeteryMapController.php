@@ -17,15 +17,32 @@ class CemeteryMapController extends Controller
             ->orderBy('code')
             ->get();
 
-        // Load occupied plots with deceased and member info
-        $plots = CemeteryPlot::with([
-            'section:id,name,code,color',
-            'deceased.member.user:id,name',
-            'deceased.beneficiary:id,name',
-        ])
-            ->where('status', 'occupied')
+        return inertia()->render('cemetery/map', [
+            'sections' => $sections,
+            'mapboxToken' => config('services.mapbox.token'),
+            'centerCoordinates' => [
+                'lat' => config('cemetery.center.latitude', 14.5995),
+                'lng' => config('cemetery.center.longitude', 120.9842),
+            ],
+            'initialZoom' => config('cemetery.zoom', 16),
+        ]);
+    }
+
+    /**
+     * Display a section's plot grid (public access).
+     */
+    public function section(CemeterySection $section)
+    {
+        $section->loadCount(['plots', 'occupiedPlots']);
+
+        $plots = $section->plots()
+            ->with([
+                'deceased.member.user:id,name',
+                'beneficiary:id,name',
+            ])
+            ->orderBy('plot_number')
             ->get()
-            ->map(function ($plot) {
+            ->map(function (CemeteryPlot $plot) use ($section) {
                 return [
                     'id' => $plot->id,
                     'plot_number' => $plot->plot_number,
@@ -33,11 +50,12 @@ class CemeteryMapController extends Controller
                     'longitude' => (float) $plot->longitude,
                     'status' => $plot->status,
                     'burial_date' => $plot->burial_date?->format('F d, Y'),
+                    'notes' => $plot->notes,
                     'section' => [
-                        'id' => $plot->section->id,
-                        'name' => $plot->section->name,
-                        'code' => $plot->section->code,
-                        'color' => $plot->section->color,
+                        'id' => $section->id,
+                        'name' => $section->name,
+                        'code' => $section->code,
+                        'color' => $section->color,
                     ],
                     'deceased' => $plot->deceased ? [
                         'id' => $plot->deceased->id,
@@ -45,18 +63,16 @@ class CemeteryMapController extends Controller
                         'date_of_death' => $plot->deceased->date_of_death->format('F d, Y'),
                         'cause_of_death' => $plot->deceased->cause_of_death,
                     ] : null,
+                    'beneficiary' => $plot->beneficiary ? [
+                        'id' => $plot->beneficiary->id,
+                        'name' => $plot->beneficiary->name,
+                    ] : null,
                 ];
             });
 
-        return inertia()->render('cemetery/map', [
-            'sections' => $sections,
+        return inertia()->render('cemetery/section', [
+            'section' => $section,
             'plots' => $plots,
-            'mapboxToken' => config('services.mapbox.token'),
-            'centerCoordinates' => [
-                'lat' => config('cemetery.center.latitude', 14.5995),
-                'lng' => config('cemetery.center.longitude', 120.9842),
-            ],
-            'initialZoom' => config('cemetery.zoom', 16),
         ]);
     }
 

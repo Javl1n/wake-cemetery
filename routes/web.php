@@ -17,7 +17,74 @@ Route::get('/', function () {
 
 // Admin
 Route::get('dashboard', function () {
-    return Inertia::render('admin/dashboard');
+    $user = auth()->user();
+
+    $scheduleStats = App\Models\WakeSchedule::selectRaw("
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status IN ('confirmed', 'in_progress') THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+    ")->first();
+
+    $plotStats = App\Models\CemeteryPlot::selectRaw("
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available,
+        SUM(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END) as occupied,
+        SUM(CASE WHEN status = 'reserved' THEN 1 ELSE 0 END) as reserved,
+        SUM(CASE WHEN status = 'maintenance' THEN 1 ELSE 0 END) as maintenance
+    ")->first();
+
+    $memberCount = App\Models\Member::count();
+    $lowStockCount = App\Models\InventoryItem::where('available', true)->where('stock', '<=', 5)->count();
+
+    $recentSchedules = App\Models\WakeSchedule::with([
+        'deceased.beneficiary',
+        'room',
+        'package',
+    ])->latest()->limit(6)->get();
+
+    $activeRooms = App\Models\WakeRoom::withCount(['schedules as active_count' => function ($q) {
+        $q->whereIn('status', ['confirmed', 'in_progress']);
+    }])->active()->get();
+
+    if ($user->hasRole(['staff'])) {
+        $pendingServices = App\Models\WakeSchedule::with([
+            'deceased.beneficiary',
+            'room',
+            'services' => fn ($q) => $q->wherePivot('status', 'pending'),
+        ])->whereIn('status', ['confirmed', 'in_progress'])->latest()->get()->filter(fn ($s) => $s->services->isNotEmpty());
+
+        $maintenancePlots = App\Models\CemeteryPlot::with('section:id,name,code,color')
+            ->where('status', 'maintenance')
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'plot_number' => $p->plot_number,
+                'notes' => $p->notes,
+                'section' => ['name' => $p->section->name, 'color' => $p->section->color],
+            ]);
+
+        return Inertia::render('staff/dashboard', [
+            'scheduleStats' => $scheduleStats,
+            'memberCount' => $memberCount,
+            'plotStats' => $plotStats,
+            'lowStockCount' => $lowStockCount,
+            'recentSchedules' => $recentSchedules,
+            'activeRooms' => $activeRooms,
+            'pendingServices' => $pendingServices->values(),
+            'maintenancePlots' => $maintenancePlots,
+        ]);
+    }
+
+    return Inertia::render('admin/dashboard', [
+        'scheduleStats' => $scheduleStats,
+        'memberCount' => $memberCount,
+        'plotStats' => $plotStats,
+        'lowStockCount' => $lowStockCount,
+        'recentSchedules' => $recentSchedules,
+        'activeRooms' => $activeRooms,
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Staff
@@ -35,23 +102,56 @@ Route::middleware(['auth', 'verified', 'role:member'])->prefix('/member')->name(
     Route::post('/wake-schedules/{wakeSchedule}/orders', [App\Http\Controllers\MemberWakeScheduleController::class, 'storeOrder'])->name('wake-schedules.orders.store');
 });
 
+// Member obituary management
+Route::middleware(['auth', 'verified', 'role:member'])->prefix('/member')->name('member.obituary.')->group(function () {
+    Route::get('/deceased/{deceased}/obituary/setup', [App\Http\Controllers\DeceasedObituaryController::class, 'setup'])->name('setup');
+    Route::post('/deceased/{deceased}/obituary', [App\Http\Controllers\DeceasedObituaryController::class, 'store'])->name('store');
+});
+
 Route::name('subscriptions.')->prefix('/subscription')->controller(SubscriptionController::class)->group(function () {
     Route::get('/register', 'create')->name('create')->middleware(['auth', 'member-verified']);
     Route::post('/', 'store')->name('store')->middleware(['auth', 'member-verified']);
+});
+
+// Public obituary pages
+Route::get('obituary/{token}', [App\Http\Controllers\ObituaryPageController::class, 'show'])->name('obituary.show');
+
+// Public tribute pages
+Route::prefix('tribute')->name('tribute.')->controller(App\Http\Controllers\TributePageController::class)->group(function () {
+    Route::get('{token}', 'show')->name('show');
+    Route::post('{token}/tributes', 'storeTribute')->name('tributes.store');
 });
 
 // Cemetery Map (Public access)
 Route::name('cemetery.')->prefix('cemetery')->controller(CemeteryMapController::class)->group(function () {
     Route::get('/map', 'index')->name('map');
     Route::get('/search', 'search')->name('search');
+    Route::get('/sections/{section}', 'section')->name('section');
+});
+
+// Admin - Staff Management
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::resource('staff', App\Http\Controllers\StaffController::class)->except(['show', 'create', 'edit']);
+});
+
+// Admin / Staff - Insurance Subscription Review
+Route::middleware(['auth', 'verified', 'role:admin,staff'])->name('subscriptions.review.')->prefix('subscriptions/review')->controller(App\Http\Controllers\SubscriptionReviewController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('{subscription}/approve', 'approve')->name('approve');
+    Route::post('{subscription}/reject', 'reject')->name('reject');
 });
 
 // Admin - Cemetery Management
 Route::middleware(['auth', 'verified', 'role:admin,staff'])->group(function () {
     Route::resource('cemetery-sections', App\Http\Controllers\CemeterySectionController::class)->except(['show', 'create', 'edit']);
     Route::resource('cemetery-plots', App\Http\Controllers\CemeteryPlotController::class)->except(['show', 'create', 'edit']);
+    Route::patch('cemetery-plots/{cemeteryPlot}/flag-maintenance', [App\Http\Controllers\CemeteryPlotController::class, 'flagMaintenance'])->name('cemetery-plots.flag-maintenance');
+    Route::patch('cemetery-plots/{cemeteryPlot}/resolve-maintenance', [App\Http\Controllers\CemeteryPlotController::class, 'resolveMaintenance'])->name('cemetery-plots.resolve-maintenance');
+    Route::get('cemetery-maintenance', [App\Http\Controllers\CemeteryMaintenanceController::class, 'index'])->name('cemetery-maintenance.index');
 
     Route::resource('inventory-items', App\Http\Controllers\InventoryItemController::class)->except(['show', 'create', 'edit']);
+
+    Route::resource('wake-services', App\Http\Controllers\WakeServiceController::class)->except(['show', 'create', 'edit']);
 
     Route::resource('wake-schedules', App\Http\Controllers\WakeScheduleController::class)->except(['show', 'create', 'edit']);
     Route::post('wake-schedules/{wakeSchedule}/complete', [App\Http\Controllers\WakeScheduleController::class, 'complete'])->name('wake-schedules.complete');

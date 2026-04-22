@@ -46,7 +46,7 @@ export default function Welcome({
 
             <div className='min-h-screen flex flex-col'>
                 <header className="sticky bg-background top-0 z-50 w-full shadow-lg">
-                    <div className="mx-auto max-w-7xl px-6">
+                    <div className="w-screen">
                         <Navbar5 />
                     </div>
                 </header>

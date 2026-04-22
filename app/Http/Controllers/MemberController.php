@@ -55,6 +55,10 @@ class MemberController extends Controller
                 ->first()
             : null;
 
+        $deceaseds = $member
+            ? $member->deceaseds()->with(['beneficiary', 'obituary'])->latest()->get()
+            : [];
+
         return inertia()->render('members/dashboard', [
             'member' => $member,
             'subscription' => $member?->subscription,
@@ -62,6 +66,7 @@ class MemberController extends Controller
             'claims' => $member?->subscription?->claims ?? [],
             'wakeScheduleCount' => $wakeScheduleCount,
             'activeWakeSchedule' => $activeWakeSchedule,
+            'deceaseds' => $deceaseds,
         ]);
     }
 

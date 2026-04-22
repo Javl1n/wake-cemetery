@@ -18,11 +18,6 @@ class WakeServiceSeeder extends Seeder
                 'price' => 8000.00,
             ],
             [
-                'name' => 'Casket Rental',
-                'description' => 'Premium casket rental for the wake duration',
-                'price' => 5000.00,
-            ],
-            [
                 'name' => 'Flower Arrangement',
                 'description' => 'Beautiful floral arrangements and wreaths',
                 'price' => 3000.00,

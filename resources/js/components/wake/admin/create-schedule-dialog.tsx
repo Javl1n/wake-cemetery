@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import type { WakePackage, WakeRoom, WakeService, InventoryItem } from '@/types/wake';
 
@@ -279,7 +280,8 @@ export default function CreateScheduleDialog({
                                     Services included in the selected package are checked by default.
                                 </p>
                             </div>
-                            <div className="grid gap-3 p-4 border rounded-lg bg-muted/50">
+                            <ScrollArea className="h-64 rounded-lg border bg-muted/50">
+                            <div className="grid gap-3 p-4">
                                 {services.map((service) => {
                                     const inPackage = selectedPackage?.services?.some((s) => s.id === service.id);
                                     return (
@@ -316,6 +318,7 @@ export default function CreateScheduleDialog({
                                     );
                                 })}
                             </div>
+                            </ScrollArea>
                             {errors.services && (
                                 <p className="text-sm text-destructive">{errors.services}</p>
                             )}
@@ -330,7 +333,8 @@ export default function CreateScheduleDialog({
                                         Select items to include with this wake schedule.
                                     </p>
                                 </div>
-                                <div className="grid gap-2 p-4 border rounded-lg bg-muted/50">
+                                <ScrollArea className="h-56 rounded-lg border bg-muted/50">
+                                <div className="grid gap-2 p-4">
                                     {inventoryItems.map((item) => {
                                         const quantity = selectedItems.get(item.id) ?? 0;
                                         const isSelected = quantity > 0;
@@ -385,6 +389,7 @@ export default function CreateScheduleDialog({
                                         );
                                     })}
                                 </div>
+                                </ScrollArea>
                                 {errors.inventory_items && (
                                     <p className="text-sm text-destructive">{errors.inventory_items}</p>
                                 )}

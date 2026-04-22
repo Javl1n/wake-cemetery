@@ -22,8 +22,8 @@ class CemeteryPlotFactory extends Factory
             'section_id' => CemeterySection::factory(),
             'deceased_id' => null,
             'plot_number' => fake()->unique()->bothify('??-###'),
-            'latitude' => fake()->latitude(14.5, 14.7),
-            'longitude' => fake()->longitude(120.9, 121.1),
+            'latitude' => fake()->randomFloat(6, 6.2105, 6.2120),
+            'longitude' => fake()->randomFloat(6, 125.0684, 125.0716),
             'status' => 'available',
             'burial_date' => null,
             'notes' => fake()->optional()->sentence(),
@@ -39,6 +39,28 @@ class CemeteryPlotFactory extends Factory
             'deceased_id' => Deceased::factory(),
             'status' => 'occupied',
             'burial_date' => fake()->dateTimeBetween('-10 years', 'now'),
+        ]);
+    }
+
+    /**
+     * Indicate that the plot is reserved.
+     */
+    public function reserved(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'beneficiary_id' => \App\Models\Beneficiary::factory(),
+            'status' => 'reserved',
+        ]);
+    }
+
+    /**
+     * Indicate that the plot is flagged for maintenance.
+     */
+    public function maintenance(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'maintenance',
+            'notes' => fake()->sentence(),
         ]);
     }
 }

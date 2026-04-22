@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/drawer';
 import { Menu, Plus, Edit, Trash2 } from 'lucide-react';
 import CemeteryMapContainer from '@/components/cemetery/cemetery-map-container';
-import SectionFormDialog from '@/components/cemetery/admin/section-form-dialog';
+import CreateSectionDialog from '@/components/cemetery/admin/create-section-dialog';
+import EditSectionDialog from '@/components/cemetery/admin/edit-section-dialog';
 import type { CemeterySection, CemeteryPlot } from '@/types/cemetery';
 import AppLayout from '@/layouts/app-layout';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -34,8 +35,8 @@ export default function CemeterySectionsIndex({
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedSection, setSelectedSection] = useState<CemeterySection | null>(null);
-    const [showCreateForm, setShowCreateForm] = useState(false);
-    const [selectedSectionForEdit, setSelectedSectionForEdit] = useState<CemeterySection | null>(null);
+    const [showCreateDialog, setShowCreateDialog] = useState(false);
+    const [editingSection, setEditingSection] = useState<CemeterySection | null>(null);
 
     const filteredSections = sections.filter((section) =>
         section.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -44,8 +45,7 @@ export default function CemeterySectionsIndex({
 
     const handleEdit = (section: CemeterySection, e: React.MouseEvent) => {
         e.stopPropagation();
-        setSelectedSectionForEdit(section);
-        setShowCreateForm(true);
+        setEditingSection(section);
     };
 
     const handleDelete = (section: CemeterySection, e: React.MouseEvent) => {
@@ -59,10 +59,7 @@ export default function CemeterySectionsIndex({
         setSelectedSection(section);
     };
 
-    const handleCloseForm = () => {
-        setShowCreateForm(false);
-        setSelectedSectionForEdit(null);
-    };
+    const handleCloseEdit = () => setEditingSection(null);
 
     return (
         <AppLayout>
@@ -105,7 +102,7 @@ export default function CemeterySectionsIndex({
                                         Cemetery Sections
                                     </span>
                                 </CardTitle>
-                                <Button size="sm" onClick={() => setShowCreateForm(true)}>
+                                <Button size="sm" onClick={() => setShowCreateDialog(true)}>
                                     <Plus className="h-4 w-4 mr-2" />
                                     Create
                                 </Button>
@@ -180,7 +177,7 @@ export default function CemeterySectionsIndex({
                                     <div className="flex items-center justify-between">
                                         <CardTitle>Cemetery Sections</CardTitle>
                                         <Button size="sm" onClick={() => {
-                                            setShowCreateForm(true);
+                                            setShowCreateDialog(true);
                                             setOpen(false);
                                         }}>
                                             <Plus className="h-4 w-4 mr-2" />
@@ -244,14 +241,23 @@ export default function CemeterySectionsIndex({
                     </DrawerContent>
                 </Drawer>
 
-                {/* Create/Edit Section Form Dialog */}
-                <SectionFormDialog
-                    section={selectedSectionForEdit || undefined}
-                    open={showCreateForm}
-                    onClose={handleCloseForm}
+                <CreateSectionDialog
+                    open={showCreateDialog}
+                    onClose={() => setShowCreateDialog(false)}
                     mapboxToken={mapboxToken}
                     centerCoordinates={centerCoordinates}
                 />
+
+                {editingSection && (
+                    <EditSectionDialog
+                        key={editingSection.id}
+                        section={editingSection}
+                        open={true}
+                        onClose={handleCloseEdit}
+                        mapboxToken={mapboxToken}
+                        centerCoordinates={centerCoordinates}
+                    />
+                )}
             </div>
         </AppLayout>
     );

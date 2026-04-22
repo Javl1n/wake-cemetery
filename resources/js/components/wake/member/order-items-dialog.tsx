@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import type { InventoryItem, WakeSchedule } from '@/types/wake';
 
@@ -97,7 +96,7 @@ export default function OrderItemsDialog({ open, onClose, schedule, inventoryIte
 
     return (
         <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0">
                 <DialogHeader className="p-6 pb-0">
                     <DialogTitle className="flex items-center gap-2">
                         <ShoppingCart className="h-5 w-5" />
@@ -108,12 +107,12 @@ export default function OrderItemsDialog({ open, onClose, schedule, inventoryIte
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex flex-col flex-1 min-h-0 p-6 gap-4">
+                <div className="overflow-y-auto p-6 flex flex-col gap-4">
                     {/* Cart Summary */}
                     {cart.length > 0 && (
                         <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
                             <p className="text-sm font-semibold">Your Order ({cart.length} item{cart.length !== 1 ? 's' : ''})</p>
-                            <div className="space-y-1.5">
+                            <div className="max-h-32 overflow-y-auto space-y-1.5">
                                 {cart.map((c) => (
                                     <div key={c.item.id} className="flex items-center gap-2 text-sm">
                                         <span className="flex-1 truncate">{c.item.name}</span>
@@ -168,8 +167,7 @@ export default function OrderItemsDialog({ open, onClose, schedule, inventoryIte
                     />
 
                     {/* Items List */}
-                    <ScrollArea className="flex-1 min-h-0 -mx-1 px-1">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {filteredItems.map((item) => {
                                 const inCart = cart.find((c) => c.item.id === item.id);
                                 return (
@@ -209,8 +207,7 @@ export default function OrderItemsDialog({ open, onClose, schedule, inventoryIte
                                     No items found
                                 </p>
                             )}
-                        </div>
-                    </ScrollArea>
+                    </div>
 
                     {/* Notes */}
                     <div className="space-y-1">

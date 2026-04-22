@@ -132,6 +132,9 @@ export interface WakeSchedule {
                 id: number
             }
         };
+        obituary?: {
+            tribute_token: string;
+        } | null;
     };
     room: WakeRoom;
     package: WakePackage;

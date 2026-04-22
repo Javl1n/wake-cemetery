@@ -23,7 +23,6 @@ import PlotFormDialog from '@/components/cemetery/admin/plot-form-dialog';
 import type { CemeterySection, CemeteryPlot } from '@/types/cemetery';
 import AppLayout from '@/layouts/app-layout';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { spawn } from 'child_process';
 
 interface CemeteryPlotsPageProps {
     sections: CemeterySection[];
@@ -52,18 +51,15 @@ export default function CemeteryPlotsIndex({
 
     const filteredPlots = useMemo(() => {
         return plots.filter((plot) => {
-            // Search filter
             const matchesSearch =
                 plot.plot_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (plot.deceased?.name &&
                     plot.deceased.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-            // Section filter
             const matchesSection =
                 selectedSection === 'all' ||
                 plot.section.id === parseInt(selectedSection);
 
-            // Status filter
             const matchesStatus =
                 selectedStatus === 'all' || plot.status === selectedStatus;
 
@@ -121,11 +117,9 @@ export default function CemeteryPlotsIndex({
                     <Card className="backdrop-blur-sm bg-background/95 shadow-lg">
                         <CardHeader>
                             <div className="flex items-center justify-between">
-                                <CardTitle className=''>
+                                <CardTitle className="">
                                     <SidebarTrigger className="my-auto" />
-                                    <span className='my-auto'>
-                                        Cemetery Plots
-                                    </span>
+                                    <span className="my-auto">Cemetery Plots</span>
                                 </CardTitle>
                                 <Button size="sm" onClick={() => setShowCreateForm(true)}>
                                     <Plus className="h-4 w-4 mr-2" />

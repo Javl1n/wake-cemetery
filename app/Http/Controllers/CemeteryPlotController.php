@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateCemeteryPlotRequest;
 use App\Models\CemeteryPlot;
 use App\Models\CemeterySection;
 use App\Models\Deceased;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class CemeteryPlotController extends Controller
@@ -101,5 +102,42 @@ class CemeteryPlotController extends Controller
         $cemeteryPlot->delete();
 
         return redirect()->route('cemetery-plots.index')->with('success', 'Cemetery plot deleted successfully');
+    }
+
+    /**
+     * Flag a cemetery plot as needing maintenance.
+     */
+    public function flagMaintenance(Request $request, CemeteryPlot $cemeteryPlot): \Illuminate\Http\RedirectResponse
+    {
+        Gate::authorize('update', $cemeteryPlot);
+
+        $validated = $request->validate([
+            'notes' => 'required|string|max:1000',
+        ]);
+
+        $cemeteryPlot->update([
+            'status' => 'maintenance',
+            'notes' => $validated['notes'],
+        ]);
+
+        return redirect()->back()->with('success', 'Plot flagged for maintenance.');
+    }
+
+    /**
+     * Resolve maintenance on a cemetery plot, restoring its previous status.
+     */
+    public function resolveMaintenance(CemeteryPlot $cemeteryPlot): \Illuminate\Http\RedirectResponse
+    {
+        Gate::authorize('update', $cemeteryPlot);
+
+        $restoredStatus = match (true) {
+            $cemeteryPlot->deceased_id !== null => 'occupied',
+            $cemeteryPlot->beneficiary_id !== null => 'reserved',
+            default => 'available',
+        };
+
+        $cemeteryPlot->update(['status' => $restoredStatus]);
+
+        return redirect()->back()->with('success', 'Maintenance resolved.');
     }
 }

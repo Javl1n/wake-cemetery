@@ -43,15 +43,17 @@ class DatabaseSeeder extends Seeder
         ])->create();
 
         $this->call([
+            CemeterySectionSeeder::class,
+            // CemeteryPlotSeeder::class,
             MemberSeeder::class,
-            WakePackageSeeder::class,
             WakeServiceSeeder::class,
-            InsuranceSeeder::class,
-            SubscriptionSeeder::class,
-            BeneficiarySeeder::class,
             WakeRoomSeeder::class,
             InventoryCategorySeeder::class,
             InventoryItemSeeder::class,
+            WakePackageSeeder::class,
+            InsuranceSeeder::class,
+            SubscriptionSeeder::class,
+            BeneficiarySeeder::class,
         ]);
     }
 }

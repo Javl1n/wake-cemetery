@@ -20,6 +20,7 @@ class MemberWakeScheduleController extends Controller
 
         $schedules = WakeSchedule::with([
             'deceased.beneficiary',
+            'deceased.obituary',
             'room',
             'package',
             'services',

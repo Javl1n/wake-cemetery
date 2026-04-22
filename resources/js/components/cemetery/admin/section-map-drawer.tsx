@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import Map, { MapRef, NavigationControl, useControl } from 'react-map-gl/mapbox';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Map, { MapRef, NavigationControl } from 'react-map-gl/mapbox';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
-import type { MapboxGeoJSONFeature } from 'mapbox-gl';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+import type { MapLayerMouseEvent } from 'mapbox-gl';
 import { SectionGeometry } from '@/types/cemetery';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, Pentagon, Minus } from 'lucide-react';
@@ -13,126 +14,8 @@ interface SectionMapDrawerProps {
     sectionColor: string;
     onGeometryChange: (
         geometry: SectionGeometry | null,
-        type: 'polygon' | 'line' | null
+        type: 'polygon' | 'line' | null,
     ) => void;
-}
-
-function DrawControl({
-    onCreate,
-    onUpdate,
-    onDelete,
-    sectionColor,
-    initialGeometry,
-    onDrawReady,
-}: {
-    onCreate: (feature: MapboxGeoJSONFeature) => void;
-    onUpdate: (feature: MapboxGeoJSONFeature) => void;
-    onDelete: () => void;
-    sectionColor: string;
-    initialGeometry?: SectionGeometry | null;
-    onDrawReady: (draw: MapboxDraw) => void;
-}) {
-    const drawRef = useRef<MapboxDraw | null>(null);
-
-    useControl(
-        () => {
-            drawRef.current = new MapboxDraw({
-                displayControlsDefault: false,
-                controls: {},
-                defaultMode: 'simple_select',
-                styles: [
-                    {
-                        id: 'gl-draw-polygon-fill',
-                        type: 'fill',
-                        filter: ['all', ['==', '$type', 'Polygon']],
-                        paint: {
-                            'fill-color': sectionColor,
-                            'fill-opacity': 0.3,
-                        },
-                    },
-                    {
-                        id: 'gl-draw-polygon-stroke',
-                        type: 'line',
-                        filter: ['all', ['==', '$type', 'Polygon']],
-                        paint: {
-                            'line-color': sectionColor,
-                            'line-width': 3,
-                        },
-                    },
-                    {
-                        id: 'gl-draw-line',
-                        type: 'line',
-                        filter: ['all', ['==', '$type', 'LineString']],
-                        paint: {
-                            'line-color': sectionColor,
-                            'line-width': 3,
-                        },
-                    },
-                    {
-                        id: 'gl-draw-point',
-                        type: 'circle',
-                        filter: ['all', ['==', '$type', 'Point']],
-                        paint: {
-                            'circle-radius': 5,
-                            'circle-color': sectionColor,
-                        },
-                    },
-                    {
-                        id: 'gl-draw-polygon-midpoint',
-                        type: 'circle',
-                        filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', 'midpoint']],
-                        paint: {
-                            'circle-radius': 4,
-                            'circle-color': sectionColor,
-                        },
-                    },
-                    {
-                        id: 'gl-draw-polygon-and-line-vertex-active',
-                        type: 'circle',
-                        filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point']],
-                        paint: {
-                            'circle-radius': 6,
-                            'circle-color': '#ffffff',
-                            'circle-stroke-color': sectionColor,
-                            'circle-stroke-width': 2,
-                        },
-                    },
-                ],
-            });
-            return drawRef.current;
-        },
-        ({ map }) => {
-            map.on('draw.create', (e) => {
-                if (e.features[0]) {
-                    onCreate(e.features[0] as MapboxGeoJSONFeature);
-                }
-            });
-            map.on('draw.update', (e) => {
-                if (e.features[0]) {
-                    onUpdate(e.features[0] as MapboxGeoJSONFeature);
-                }
-            });
-            map.on('draw.delete', () => {
-                onDelete();
-            });
-
-            if (initialGeometry && drawRef.current) {
-                drawRef.current.add(initialGeometry);
-            }
-
-            if (drawRef.current) {
-                onDrawReady(drawRef.current);
-            }
-        },
-        ({ map }) => {
-            map.off('draw.create', onCreate);
-            map.off('draw.update', onUpdate);
-            map.off('draw.delete', onDelete);
-        },
-        { position: 'top-left' }
-    );
-
-    return null;
 }
 
 export function SectionMapDrawer({
@@ -143,140 +26,163 @@ export function SectionMapDrawer({
     onGeometryChange,
 }: SectionMapDrawerProps) {
     const mapRef = useRef<MapRef>(null);
-    const drawControlRef = useRef<MapboxDraw | null>(null);
+    const drawRef = useRef<MapboxDraw | null>(null);
+    const onGeometryChangeRef = useRef(onGeometryChange);
+    onGeometryChangeRef.current = onGeometryChange;
+
     const [drawMode, setDrawMode] = useState<'polygon' | 'line' | null>(null);
-    const [isDrawReady, setIsDrawReady] = useState(false);
+    const [hasGeometry, setHasGeometry] = useState(!!initialGeometry);
+    const [isReady, setIsReady] = useState(false);
 
-    const handleDrawReady = (draw: MapboxDraw) => {
-        console.log('Draw control passed to handleDrawReady:', draw);
-        drawControlRef.current = draw;
+    const buildGeometry = (feature: MapLayerMouseEvent['features'][0]): SectionGeometry => {
+        const geometryType = feature.geometry.type === 'Polygon' ? 'polygon' : 'line';
+        return {
+            type: 'Feature',
+            geometry: {
+                type: feature.geometry.type as 'Polygon' | 'LineString',
+                coordinates: feature.geometry.coordinates as number[][] | number[][][],
+            },
+            properties: { geometryType },
+        };
     };
 
-    // Wait for map to be fully loaded before enabling draw tools
-    useEffect(() => {
+    const handleMapLoad = useCallback(() => {
         const map = mapRef.current?.getMap();
-        if (!map) return;
-
-        const handleMapLoad = () => {
-            console.log('Map loaded, waiting for draw control to be ready...');
-            // Give MapboxDraw extra time to initialize its internal store
-            setTimeout(() => {
-                if (drawControlRef.current) {
-                    console.log('Draw control should be ready now');
-                    setIsDrawReady(true);
-                }
-            }, 500);
-        };
-
-        if (map.loaded()) {
-            handleMapLoad();
-        } else {
-            map.on('load', handleMapLoad);
-        }
-
-        return () => {
-            map.off('load', handleMapLoad);
-        };
-    }, []);
-
-    const handleCreate = (feature: MapboxGeoJSONFeature) => {
-        const geometryType =
-            feature.geometry.type === 'Polygon' ? 'polygon' : 'line';
-
-        const geometry: SectionGeometry = {
-            type: 'Feature',
-            geometry: {
-                type: feature.geometry.type as 'Polygon' | 'LineString',
-                coordinates: feature.geometry.coordinates as
-                    | number[][]
-                    | number[][][],
-            },
-            properties: {
-                geometryType,
-            },
-        };
-
-        onGeometryChange(geometry, geometryType);
-        setDrawMode(null);
-    };
-
-    const handleUpdate = (feature: MapboxGeoJSONFeature) => {
-        const geometryType =
-            feature.geometry.type === 'Polygon' ? 'polygon' : 'line';
-
-        const geometry: SectionGeometry = {
-            type: 'Feature',
-            geometry: {
-                type: feature.geometry.type as 'Polygon' | 'LineString',
-                coordinates: feature.geometry.coordinates as
-                    | number[][]
-                    | number[][][],
-            },
-            properties: {
-                geometryType,
-            },
-        };
-
-        onGeometryChange(geometry, geometryType);
-    };
-
-    const handleDelete = () => {
-        onGeometryChange(null, null);
-    };
-
-    const startDrawing = (mode: 'polygon' | 'line') => {
-        if (!drawControlRef.current) {
-            console.error('Draw control not initialized');
+        if (!map || drawRef.current) {
             return;
         }
 
-        try {
-            // Try to delete existing features, but don't fail if there's an error
-            try {
-                const existingFeatures = drawControlRef.current.getAll();
-                if (existingFeatures && existingFeatures.features && existingFeatures.features.length > 0) {
-                    drawControlRef.current.deleteAll();
-                }
-            } catch (e) {
-                console.log('Could not delete existing features, continuing anyway');
-            }
+        const draw = new MapboxDraw({
+            displayControlsDefault: false,
+            controls: {},
+            defaultMode: 'simple_select',
+            styles: [
+                {
+                    id: 'gl-draw-polygon-fill',
+                    type: 'fill',
+                    filter: ['all', ['==', '$type', 'Polygon']],
+                    paint: { 'fill-color': sectionColor, 'fill-opacity': 0.3 },
+                },
+                {
+                    id: 'gl-draw-polygon-stroke',
+                    type: 'line',
+                    filter: ['all', ['==', '$type', 'Polygon']],
+                    paint: { 'line-color': sectionColor, 'line-width': 3 },
+                },
+                {
+                    id: 'gl-draw-line',
+                    type: 'line',
+                    filter: ['all', ['==', '$type', 'LineString']],
+                    paint: { 'line-color': sectionColor, 'line-width': 3 },
+                },
+                {
+                    id: 'gl-draw-point',
+                    type: 'circle',
+                    filter: ['all', ['==', '$type', 'Point']],
+                    paint: { 'circle-radius': 5, 'circle-color': sectionColor },
+                },
+                {
+                    id: 'gl-draw-polygon-midpoint',
+                    type: 'circle',
+                    filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', 'midpoint']],
+                    paint: { 'circle-radius': 4, 'circle-color': sectionColor },
+                },
+                {
+                    id: 'gl-draw-polygon-and-line-vertex-active',
+                    type: 'circle',
+                    filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point']],
+                    paint: {
+                        'circle-radius': 6,
+                        'circle-color': '#ffffff',
+                        'circle-stroke-color': sectionColor,
+                        'circle-stroke-width': 2,
+                    },
+                },
+            ],
+        });
 
-            if (mode === 'polygon') {
-                drawControlRef.current.changeMode('draw_polygon');
-            } else {
-                drawControlRef.current.changeMode('draw_line_string');
+        map.addControl(draw);
+        drawRef.current = draw;
+
+        map.on('draw.create', (e) => {
+            if (!e.features[0]) {
+                return;
             }
-            setDrawMode(mode);
-        } catch (error) {
-            console.error('Error starting drawing:', error);
+            const geometry = buildGeometry(e.features[0]);
+            onGeometryChangeRef.current(geometry, geometry.properties.geometryType);
+            setDrawMode(null);
+            setHasGeometry(true);
+        });
+
+        map.on('draw.update', (e) => {
+            if (!e.features[0]) {
+                return;
+            }
+            const geometry = buildGeometry(e.features[0]);
+            onGeometryChangeRef.current(geometry, geometry.properties.geometryType);
+        });
+
+        map.on('draw.delete', () => {
+            onGeometryChangeRef.current(null, null);
+            setHasGeometry(false);
+        });
+
+        if (initialGeometry) {
+            draw.add(initialGeometry);
         }
+
+        setIsReady(true);
+    }, []);
+
+    // Remove draw control from map on unmount
+    useEffect(() => {
+        return () => {
+            const map = mapRef.current?.getMap();
+            if (map && drawRef.current) {
+                try {
+                    if (map.hasControl(drawRef.current)) {
+                        map.removeControl(drawRef.current);
+                    }
+                } catch {}
+                drawRef.current = null;
+            }
+        };
+    }, []);
+
+    const startDrawing = (mode: 'polygon' | 'line') => {
+        if (!drawRef.current) {
+            return;
+        }
+        const existing = drawRef.current.getAll();
+        if (existing.features.length > 0) {
+            drawRef.current.deleteAll();
+        }
+        drawRef.current.changeMode(
+            mode === 'polygon' ? 'draw_polygon' : 'draw_line_string',
+        );
+        setDrawMode(mode);
     };
 
     const clearDrawing = () => {
-        if (!drawControlRef.current) return;
-
-        try {
-            drawControlRef.current.deleteAll();
-            drawControlRef.current.changeMode('simple_select');
-            onGeometryChange(null, null);
-            setDrawMode(null);
-        } catch (error) {
-            console.error('Error clearing drawing:', error);
+        if (!drawRef.current) {
+            return;
         }
+        drawRef.current.deleteAll();
+        drawRef.current.changeMode('simple_select');
+        onGeometryChangeRef.current(null, null);
+        setDrawMode(null);
+        setHasGeometry(false);
     };
 
     const editDrawing = () => {
-        if (!drawControlRef.current) return;
-
-        try {
-            const features = drawControlRef.current.getAll().features;
-            if (features.length > 0) {
-                drawControlRef.current.changeMode('direct_select', {
-                    featureId: features[0].id,
-                });
-            }
-        } catch (error) {
-            console.error('Error editing drawing:', error);
+        if (!drawRef.current) {
+            return;
+        }
+        const features = drawRef.current.getAll().features;
+        if (features.length > 0 && features[0].id !== undefined) {
+            drawRef.current.changeMode('direct_select', {
+                featureId: String(features[0].id),
+            });
         }
     };
 
@@ -292,15 +198,8 @@ export function SectionMapDrawer({
                 }}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
+                onLoad={handleMapLoad}
             >
-                <DrawControl
-                    onCreate={handleCreate}
-                    onUpdate={handleUpdate}
-                    onDelete={handleDelete}
-                    sectionColor={sectionColor}
-                    initialGeometry={initialGeometry}
-                    onDrawReady={handleDrawReady}
-                />
                 <NavigationControl position="top-right" />
             </Map>
 
@@ -311,7 +210,7 @@ export function SectionMapDrawer({
                     variant={drawMode === 'polygon' ? 'default' : 'outline'}
                     onClick={() => startDrawing('polygon')}
                     className="bg-background"
-                    disabled={!isDrawReady}
+                    disabled={!isReady}
                 >
                     <Pentagon className="h-4 w-4 mr-2" />
                     Draw Polygon
@@ -322,12 +221,12 @@ export function SectionMapDrawer({
                     variant={drawMode === 'line' ? 'default' : 'outline'}
                     onClick={() => startDrawing('line')}
                     className="bg-background"
-                    disabled={!isDrawReady}
+                    disabled={!isReady}
                 >
                     <Minus className="h-4 w-4 mr-2" />
                     Draw Line
                 </Button>
-                {initialGeometry && (
+                {hasGeometry && (
                     <>
                         <Button
                             type="button"
@@ -335,6 +234,7 @@ export function SectionMapDrawer({
                             variant="outline"
                             onClick={editDrawing}
                             className="bg-background"
+                            disabled={!isReady}
                         >
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit
@@ -345,6 +245,7 @@ export function SectionMapDrawer({
                             variant="outline"
                             onClick={clearDrawing}
                             className="bg-background"
+                            disabled={!isReady}
                         >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Clear

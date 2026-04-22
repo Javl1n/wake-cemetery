@@ -2,64 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DeceasedObituary;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreDeceasedObituaryRequest;
+use App\Models\Deceased;
+use Illuminate\Support\Str;
 
 class DeceasedObituaryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function setup(Deceased $deceased)
     {
-        //
+        abort_unless(
+            $deceased->member_id === auth()->user()->member?->id,
+            403
+        );
+
+        $deceased->load(['beneficiary', 'obituary']);
+
+        return inertia()->render('members/obituary/setup', [
+            'deceased' => $deceased,
+            'obituary' => $deceased->obituary,
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(StoreDeceasedObituaryRequest $request, Deceased $deceased)
     {
-        //
-    }
+        abort_unless(
+            $deceased->member_id === auth()->user()->member?->id,
+            403
+        );
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $deceased->load('obituary');
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(DeceasedObituary $deceasedObituary)
-    {
-        //
-    }
+        $imagePath = $deceased->obituary?->image ?? '';
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(DeceasedObituary $deceasedObituary)
-    {
-        //
-    }
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('obituaries', 'public');
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, DeceasedObituary $deceasedObituary)
-    {
-        //
-    }
+        $obituary = $deceased->obituary()->updateOrCreate(
+            ['deceased_id' => $deceased->id],
+            [
+                'template' => $request->integer('template'),
+                'image' => $imagePath,
+                'description' => $request->input('description'),
+                'tribute_token' => $deceased->obituary?->tribute_token ?? Str::uuid()->toString(),
+            ]
+        );
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(DeceasedObituary $deceasedObituary)
-    {
-        //
+        return redirect()->route('tribute.show', $obituary->tribute_token);
     }
 }

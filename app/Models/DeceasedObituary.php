@@ -4,16 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use PDO;
 
 class DeceasedObituary extends Model
 {
     /** @use HasFactory<\Database\Factories\DeceasedObituaryFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'deceased_id',
+        'template',
+        'image',
+        'description',
+        'tribute_token',
+    ];
+
     public function deceased()
     {
-        return $this->hasOne(Deceased::class, 'deceased_id');
+        return $this->belongsTo(Deceased::class);
     }
 
     public function tributes()

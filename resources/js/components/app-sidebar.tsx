@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Map, MapPin, MapPinHouseIcon, CalendarCheck, Package } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { LayoutGrid, Map, MapPinHouseIcon, CalendarCheck, Package, Wrench, UserCog, ShieldCheck, TriangleAlert } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -15,6 +15,8 @@ import {
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
 import { dashboard } from '@/routes';
+import * as staffRoutes from '@/routes/staff';
+import * as subscriptionReviewRoutes from '@/routes/subscriptions/review/index';
 
 const mainNavItems: NavItem[] = [
     {
@@ -35,6 +37,11 @@ const cemeteryNavItems: NavItem[] = [
         icon: Map,
         href: '/cemetery-plots',
     },
+    {
+        title: 'Maintenance',
+        icon: TriangleAlert,
+        href: '/cemetery-maintenance',
+    },
 ];
 
 const wakeNavItems: NavItem[] = [
@@ -48,22 +55,32 @@ const wakeNavItems: NavItem[] = [
         icon: Package,
         href: '/inventory-items',
     },
+    {
+        title: 'Services',
+        icon: Wrench,
+        href: '/wake-services',
+    },
 ];
 
-const footerNavItems: NavItem[] = [
-    // {
-    //     title: 'Repository',
-    //     href: 'https://github.com/laravel/react-starter-kit',
-    //     icon: Folder,
-    // },
-    // {
-    //     title: 'Documentation',
-    //     href: 'https://laravel.com/docs/starter-kits#react',
-    //     icon: BookOpen,
-    // },
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Staff',
+        icon: UserCog,
+        href: staffRoutes.index().url,
+    },
+    {
+        title: 'Insurance Subscriptions',
+        icon: ShieldCheck,
+        href: subscriptionReviewRoutes.index().url,
+    },
 ];
+
+const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
+    const { auth } = usePage().props;
+    const isAdmin = (auth.user as { role: string }).role === 'admin';
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -80,8 +97,9 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
-                <NavMain items={cemeteryNavItems} title='Cemetery' />
-                <NavMain items={wakeNavItems} title='Wake Services' />
+                <NavMain items={cemeteryNavItems} title="Cemetery" />
+                <NavMain items={wakeNavItems} title="Wake Services" />
+                {isAdmin && <NavMain items={adminNavItems} title="Admin" />}
             </SidebarContent>
 
             <SidebarFooter>

@@ -18,6 +18,7 @@ import {
     Heart,
     ShieldCheck,
     Users,
+    BookHeart,
 } from 'lucide-react';
 
 interface Member {
@@ -75,6 +76,13 @@ interface ActiveWakeSchedule {
     package: { name: string };
 }
 
+interface DeceasedRecord {
+    id: number;
+    date_of_death: string;
+    beneficiary: { name: string; relationship: string } | null;
+    obituary: { tribute_token: string } | null;
+}
+
 interface Props {
     member: Member | null;
     subscription: Subscription | null;
@@ -82,6 +90,7 @@ interface Props {
     claims: Claim[];
     wakeScheduleCount: number;
     activeWakeSchedule: ActiveWakeSchedule | null;
+    deceaseds: DeceasedRecord[];
 }
 
 const subscriptionStatusColors: Record<string, string> = {
@@ -109,6 +118,7 @@ export default function MemberDashboard({
     claims,
     wakeScheduleCount,
     activeWakeSchedule,
+    deceaseds,
 }: Props) {
     const { auth } = usePage().props;
 
@@ -304,6 +314,49 @@ export default function MemberDashboard({
                             )}
                         </CardContent>
                     </Card>
+
+                    {/* Tribute Pages */}
+                    {deceaseds.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <BookHeart className="h-4 w-4" />
+                                    Tribute Pages
+                                </CardTitle>
+                                <CardDescription>
+                                    Online memorial pages for your loved ones
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="divide-y">
+                                    {deceaseds.map((d) => (
+                                        <div key={d.id} className="py-3 flex items-center justify-between gap-3">
+                                            <div>
+                                                <p className="font-medium text-sm">
+                                                    {d.beneficiary?.name ?? 'Unknown'}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground capitalize">
+                                                    {d.beneficiary?.relationship} · {format(new Date(d.date_of_death), 'MMM d, yyyy')}
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-2 shrink-0">
+                                                {d.obituary && (
+                                                    <Link href={`/tribute/${d.obituary.tribute_token}`} target="_blank">
+                                                        <Button size="sm" variant="outline">View</Button>
+                                                    </Link>
+                                                )}
+                                                <Link href={`/member/deceased/${d.id}/obituary/setup`}>
+                                                    <Button size="sm" variant={d.obituary ? 'ghost' : 'default'}>
+                                                        {d.obituary ? 'Edit' : 'Create'}
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Claims */}
                     {claims.length > 0 && (

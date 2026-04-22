@@ -1,0 +1,312 @@
+ ▐▛███▜▌   Claude Code v2.1.86
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/Development/wake-cemetery
+
+  ✻ Voice mode is now available · /voice to enable
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Referenced file resources/js/pages/members/wake-schedules/index.tsx
+  ⎿  Read resources/js/pages/obituary/template-2.tsx (110 lines)
+  ⎿  Read resources/js/pages/obituary/template-1.tsx (89 lines)
+  ⎿  Read resources/js/types/tribute.ts (38 lines)
+  ⎿  Read routes/web.php (153 lines)
+  ⎿  Plan file referenced (~/.claude/plans/generic-plotting-canyon.md)
+
+  Read 4 files (ctrl+o to expand)
+
+● Now I have everything I need. Let me do all the changes in parallel.
+
+● Update(app/Http/Requests/StoreDeceasedObituaryRequest.php)
+  ⎿  Added 1 line, removed 1 line
+      19          $hasExistingImage = $this->route('deceased')?->obituary
+          ?->image;
+      20  
+      21          return [
+      22 -            'template' => ['required', 'integer', 'in:1,2'],   
+      22 +            'template' => ['required', 'integer', 'in:1,2,3,4']
+         +,                                                              
+      23              'image' => [$hasExistingImage ? 'nullable' : 'requi
+          red', 'image', 'max:4096'],
+      24              'description' => ['nullable', 'string', 'max:2000']
+          ,
+      25          ];
+
+● Write(resources/js/pages/obituary/template-3.tsx)
+  ⎿  Wrote 90 lines to resources/js/pages/obituary/template-3.tsx
+       1 import { Head } from '@inertiajs/react';
+       2 import { format } from 'date-fns';
+       3 import type { ObituaryPageProps } from '@/types/tribute';
+       4 
+       5 export default function ObituaryTemplate3({ obituary, deceased }
+         : ObituaryPageProps) {
+       6     const name = deceased.beneficiary.name;
+       7     const dod = format(new Date(deceased.date_of_death), 'MMMM d
+         , yyyy');
+       8 
+       9     return (
+      10         <>
+     … +80 lines (ctrl+o to expand)
+
+● Write(resources/js/pages/obituary/template-4.tsx)
+  ⎿  Wrote 107 lines to resources/js/pages/obituary/template-4.tsx
+       1 import { Head } from '@inertiajs/react';
+       2 import { format } from 'date-fns';
+       3 import type { ObituaryPageProps } from '@/types/tribute';
+       4 import { User } from 'lucide-react';
+       5 
+       6 export default function ObituaryTemplate4({ obituary, deceased }
+         : ObituaryPageProps) {
+       7     const name = deceased.beneficiary.name;
+       8     const dod = format(new Date(deceased.date_of_death), 'MMMM d
+         , yyyy');
+       9 
+      10     return (
+     … +97 lines (ctrl+o to expand)
+
+● Now add the obituary links to both tribute templates, and update setup.tsx
+  with all 4 templates:
+
+● Update(resources/js/pages/tribute/template-1.tsx)
+  ⎿  Added 10 lines, removed 2 lines
+       90                      </section>
+       91                  </div>
+       92  
+       93 -                <footer className="text-center py-8 text-xs te
+          -xt-stone-400 border-t border-stone-200">                      
+       94 -                    St. Luiz Cemetery and Wake Services       
+       93 +                <footer className="text-center py-8 text-xs te
+          +xt-stone-400 border-t border-stone-200 space-y-2">            
+       94 +                    <div>                                     
+       95 +                        <a                                    
+       96 +                            href={`/obituary/${obituary.tribut
+          +e_token}`}                                                    
+       97 +                            className="text-stone-500 hover:te
+          +xt-stone-700 underline underline-offset-4 transition-colors"  
+       98 +                        >                                     
+       99 +                            View Obituary                     
+      100 +                        </a>                                  
+      101 +                    </div>                                    
+      102 +                    <p>St. Luiz Cemetery and Wake Services</p>
+      103                  </footer>
+      104              </div>
+      105  
+
+● Update(resources/js/pages/tribute/template-2.tsx)
+  ⎿  Added 10 lines, removed 2 lines
+      105                      </section>
+      106                  </div>
+      107  
+      108 -                <footer className="text-center py-6 text-xs te
+          -xt-slate-300 border-t border-slate-100 mt-8">                 
+      109 -                    St. Luiz Cemetery and Wake Services       
+      108 +                <footer className="text-center py-6 text-xs te
+          +xt-slate-300 border-t border-slate-100 mt-8 space-y-2">       
+      109 +                    <div>                                     
+      110 +                        <a                                    
+      111 +                            href={`/obituary/${obituary.tribut
+          +e_token}`}                                                    
+      112 +                            className="text-slate-400 hover:te
+          +xt-slate-600 underline underline-offset-4 transition-colors"  
+      113 +                        >                                     
+      114 +                            View Obituary                     
+      115 +                        </a>                                  
+      116 +                    </div>                                    
+      117 +                    <p>St. Luiz Cemetery and Wake Services</p>
+      118                  </footer>
+      119              </div>
+      120  
+
+● Now update setup.tsx with 4 templates and their previews:
+
+● Update(resources/js/pages/members/obituary/setup.tsx)
+  ⎿  Added 1 line, removed 1 line
+       7  import MemberLayout from '@/layouts/member-layout';
+       8  import type { TributeDeceased, TributeObituary } from '@/types/
+          tribute';
+       9  import { format } from 'date-fns';
+      10 -import { CheckCircle2, ImageIcon, Heart, CalendarDays, User } f
+         -rom 'lucide-react';                                            
+      10 +import { CheckCircle2, ImageIcon, Heart, CalendarDays, User, Cr
+         +oss } from 'lucide-react';                                     
+      11  
+      12  interface Props {
+      13      deceased: TributeDeceased & { id: number };
+
+● Update(resources/js/pages/members/obituary/setup.tsx)
+  ⎿  Added 4 lines, removed 2 lines
+      15  }
+      16  
+      17  const TEMPLATES = [
+      18 -    { id: 1, name: 'Classic', description: 'Full-width hero, ce
+         -ntered name, warm tribute grid.' },                            
+      19 -    { id: 2, name: 'Modern', description: 'Side-by-side photo a
+         -nd info, clean card tributes.' },                              
+      18 +    { id: 1, name: 'Classic', description: 'Hero image, serif f
+         +ont, centered layout.' },                                      
+      19 +    { id: 2, name: 'Modern', description: 'Side-by-side photo a
+         +nd info, clean minimal.' },                                    
+      20 +    { id: 3, name: 'Newspaper', description: 'Formal masthead, 
+         +print-inspired, grayscale.' },                                 
+      21 +    { id: 4, name: 'Soft', description: 'Warm rose tones, circu
+         +lar portrait, gentle.' },                                      
+      22  ];
+      23  
+      24  interface PreviewProps {
+
+● Now add the two new preview components after ModernPreview:
+
+● Update(resources/js/pages/members/obituary/setup.tsx)
+  ⎿  Added 69 lines
+      114      );
+      115  }
+      116  
+      117 +function NewspaperPreview({ name, relationship, dod, descripti
+          +on, imageUrl }: PreviewProps) {                               
+      118 +    return (                                                  
+      119 +        <div className="w-full font-serif bg-zinc-50 text-sm l
+          +eading-snug select-none pointer-events-none">                 
+      120 +            {/* Masthead */}                                  
+      121 +            <div className="bg-zinc-900 text-white text-center
+          + py-4 px-4 space-y-1">                                        
+      122 +                <p className="text-[9px] uppercase tracking-[0
+          +.3em] text-zinc-400">Obituary Notice</p>                      
+      123 +                <p className="font-bold text-base truncate">{n
+          +ame}</p>                                                      
+      124 +                <p className="text-[10px] text-zinc-400 upperc
+          +ase tracking-widest">{relationship} · {dod}</p>               
+      125 +            </div>                                            
+      126 +            {/* Body */}                                      
+      127 +            <div className="p-4 flex gap-3">                  
+      128 +                {imageUrl ? (                                 
+      129 +                    <img src={imageUrl} alt="" className="w-16
+          + h-20 object-cover shrink-0 grayscale rounded" />             
+      130 +                ) : (                                         
+      131 +                    <div className="w-16 h-20 bg-zinc-200 roun
+          +ded shrink-0" />                                              
+      132 +                )}                                            
+      133 +                <div className="flex-1 min-w-0 space-y-2">    
+      134 +                    <div className="border-l-2 border-zinc-300
+          + pl-2">                                                       
+      135 +                        <p className="text-[10px] uppercase tr
+          +acking-widest text-zinc-500">Cause of Passing</p>             
+      136 +                        <p className="text-xs text-zinc-600 it
+          +alic mt-0.5">Natural causes</p>                               
+      137 +                    </div>                                    
+      138 +                    {description && (                         
+      139 +                        <p className="text-xs text-zinc-700 li
+          +ne-clamp-3">{description}</p>                                 
+      140 +                    )}                                        
+      141 +                </div>                                        
+      142 +            </div>                                            
+      143 +            <div className="px-4 pb-4 text-center">           
+      144 +                <p className="text-[10px] uppercase tracking-[
+          +0.3em] text-zinc-400">— Survived by —</p>                     
+      145 +                <p className="font-semibold text-sm text-zinc-
+          +800 mt-1">{name}</p>                                          
+      146 +            </div>                                            
+      147 +        </div>                                                
+      148 +    );                                                        
+      149 +}                                                             
+      150 +                                                              
+      151 +function SoftPreview({ name, relationship, dod, description, i
+          +mageUrl }: PreviewProps) {                                    
+      152 +    return (                                                  
+      153 +        <div className="w-full bg-rose-50 text-sm leading-snug
+          + select-none pointer-events-none">                            
+      154 +            <div className="h-1 w-full bg-gradient-to-r from-r
+          +ose-200 via-pink-300 to-rose-200" />                          
+      155 +            <div className="p-5 space-y-4 text-center">       
+      156 +                {/* Portrait */}                              
+      157 +                <div className="mx-auto w-fit">               
+      158 +                    <div className="p-1 rounded-full bg-gradie
+          +nt-to-br from-rose-200 via-pink-200 to-rose-300">             
+      159 +                        {imageUrl ? (                         
+      160 +                            <img src={imageUrl} alt="" classNa
+          +me="h-20 w-20 rounded-full object-cover" />                   
+      161 +                        ) : (                                 
+      162 +                            <div className="h-20 w-20 rounded-
+          +full bg-rose-100 flex items-center justify-center">           
+      163 +                                <User className="h-8 w-8 text-
+          +rose-300" />                                                  
+      164 +                            </div>                            
+      165 +                        )}                                    
+      166 +                    </div>                                    
+      167 +                </div>                                        
+      168 +                <div className="space-y-0.5">                 
+      169 +                    <p className="text-[10px] uppercase tracki
+          +ng-widest text-rose-400">In Loving Memory</p>                 
+      170 +                    <p className="font-bold text-rose-900 trun
+          +cate">{name}</p>                                              
+      171 +                    <p className="text-xs text-rose-400 capita
+          +lize">{relationship}</p>                                      
+      172 +                </div>                                        
+      173 +                <div className="inline-block rounded-xl bg-whi
+          +te border border-rose-100 px-4 py-2 text-xs space-y-0.5">     
+      174 +                    <p className="text-rose-400 uppercase trac
+          +king-widest text-[9px]">Passed Away</p>                       
+      175 +                    <p className="font-semibold text-rose-700"
+          +>{dod}</p>                                                    
+      176 +                </div>                                        
+      177 +                {description && (                             
+      178 +                    <p className="text-xs text-rose-700 italic
+          + line-clamp-3">&ldquo;{description}&rdquo;</p>                
+      179 +                )}                                            
+      180 +            </div>                                            
+      181 +            <div className="h-1 w-full bg-gradient-to-r from-r
+          +ose-200 via-pink-300 to-rose-200" />                          
+      182 +        </div>                                                
+      183 +    );                                                        
+      184 +}                                                             
+      185 +                                                              
+      186  export default function ObituarySetup({ deceased, obituary }: 
+           Props) {
+      187      const [selectedTemplate, setSelectedTemplate] = useState<n
+           umber>(obituary?.template ?? 1);
+      188  
+
+● Now update the preview renderer to handle all 4 templates and widen the
+  template grid:
+
+● Update(resources/js/pages/members/obituary/setup.tsx)
+  ⎿  Added 1 line, removed 1 line
+      239                          {/* Template picker */}
+      240                          <div className="space-y-3">
+      241                              <Label className="text-base font-s
+           emibold">Choose a Template</Label>
+      242 -                            <div className="grid grid-cols-2 g
+          -ap-3">                                                        
+      242 +                            <div className="grid grid-cols-2 g
+          +ap-2">                                                        
+      243                                  {TEMPLATES.map((tpl) => (
+      244                                      <button
+      245                                          key={tpl.id}
+
+● Update(resources/js/pages/members/obituary/setup.tsx)
+  ⎿  Added 4 lines, removed 4 lines
+      328                              Preview
+      329                          </p>
+      330                          <div className="rounded-xl border over
+           flow-hidden shadow-sm">
+      331 -                            {selectedTemplate === 1           
+      332 -                                ? <ClassicPreview {...previewP
+          -rops} />                                                      
+      333 -                                : <ModernPreview {...previewPr
+          -ops} />                                                       
+      334 -                            }                                 
+      331 +                            {selectedTemplate === 1 && <Classi
+          +cPreview {...previewProps} />}                                
+      332 +                            {selectedTemplate === 2 && <Modern
+          +Preview {...previewProps} />}                                 
+      333 +                            {selectedTemplate === 3 && <Newspa
+          +perPreview {...previewProps} />}                              
+      334 +                            {selectedTemplate === 4 && <SoftPr
+          +eview {...previewProps} />}                                   
+      335                          </div>
+      336                          <p className="text-xs text-muted-foreg
+           round text-center mt-2">
+      337                              Updates as you fill in the form
+  ⎿  You've hit your limit · resets 8pm (Asia/Manila)
+     /upgrade or /extra-usage to finish what you’re working on.
+
+✻ Churned for 3m 29s

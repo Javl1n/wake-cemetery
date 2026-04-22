@@ -12,9 +12,17 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from '@/components/ui/drawer';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import MemberLayout from '@/layouts/member-layout';
 import OrderItemsDialog from '@/components/wake/member/order-items-dialog';
-import { Calendar, Package, ShoppingCart, ShieldCheck, Users } from 'lucide-react';
+import { Calendar, Package, ShoppingCart, ShieldCheck, Users, BookHeart, QrCode, ExternalLink, Copy, Check } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { QRCodeSVG } from 'qrcode.react';
 import type { WakeSchedule, InventoryItem } from '@/types/wake';
 
 interface Props {
@@ -62,6 +70,19 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 export default function MemberWakeSchedulesIndex({ schedules, inventoryItems }: Props) {
     const [selected, setSelected] = useState<WakeSchedule | null>(null);
     const [orderOpen, setOrderOpen] = useState(false);
+    const [qrOpen, setQrOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+    const tributeUrl = selected?.deceased.obituary
+        ? `${window.location.origin}/tribute/${selected.deceased.obituary.tribute_token}`
+        : null;
+
+    const handleCopy = () => {
+        if (!tributeUrl) return;
+        navigator.clipboard.writeText(tributeUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const canOrder = selected
         ? ['confirmed', 'in_progress'].includes(selected.status)
@@ -323,25 +344,63 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems }: 
                                 </div>
                             </ScrollArea>
 
-                            {/* Footer - Order button */}
-                            {canOrder && (
-                                <div className="p-6 border-t">
-                                    <Button className="w-full" onClick={() => setOrderOpen(true)}>
-                                        <ShoppingCart className="h-4 w-4 mr-2" />
-                                        Order Additional Items
+                            {/* Footer */}
+                            <div className="p-6 border-t space-y-3">
+                                {selected.deceased.obituary ? (
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <a
+                                            href={`/obituary/${selected.deceased.obituary.tribute_token}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="contents"
+                                        >
+                                            <Button variant="outline" className="w-full">
+                                                <ExternalLink className="h-4 w-4 mr-2" />
+                                                Obituary
+                                            </Button>
+                                        </a>
+                                        <a
+                                            href={tributeUrl!}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="contents"
+                                        >
+                                            <Button variant="outline" className="w-full">
+                                                <BookHeart className="h-4 w-4 mr-2" />
+                                                Tribute
+                                            </Button>
+                                        </a>
+                                        <Button variant="outline" onClick={() => setQrOpen(true)}>
+                                            <QrCode className="h-4 w-4 mr-2" />
+                                            QR
+                                        </Button>
+                                    </div>
+                                ) : null}
+
+                                <Link href={`/member/deceased/${selected.deceased.id}/obituary/setup`}>
+                                    <Button variant={selected.deceased.obituary ? 'ghost' : 'outline'} className="w-full">
+                                        <BookHeart className="h-4 w-4 mr-2" />
+                                        {selected.deceased.obituary ? 'Manage Obituary & Tribute' : 'Create Obituary & Tribute'}
                                     </Button>
-                                    <p className="text-xs text-muted-foreground text-center mt-2">
-                                        Orders are reviewed by our staff before processing.
-                                    </p>
-                                </div>
-                            )}
-                            {!canOrder && selected.status !== 'cancelled' && selected.status !== 'completed' && (
-                                <div className="p-6 border-t">
+                                </Link>
+
+                                {canOrder && (
+                                    <>
+                                        <Button className="w-full" onClick={() => setOrderOpen(true)}>
+                                            <ShoppingCart className="h-4 w-4 mr-2" />
+                                            Order Additional Items
+                                        </Button>
+                                        <p className="text-xs text-muted-foreground text-center">
+                                            Orders are reviewed by our staff before processing.
+                                        </p>
+                                    </>
+                                )}
+                                {!canOrder && selected.status !== 'cancelled' && selected.status !== 'completed' && (
                                     <p className="text-sm text-center text-muted-foreground">
                                         Item ordering is available once the schedule is confirmed.
                                     </p>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </>
                     )}
                 </DrawerContent>
@@ -356,6 +415,34 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems }: 
                     inventoryItems={inventoryItems}
                 />
             )}
+
+            {/* QR Code Dialog */}
+            <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+                <DialogContent className="w-auto max-w-[90vw] text-center">
+                    <DialogHeader>
+                        <DialogTitle>Share Tribute Page</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center gap-4 py-2">
+                        {tributeUrl && (
+                            <div className="rounded-xl border p-4 bg-white">
+                                <QRCodeSVG value={tributeUrl} size={220} />
+                            </div>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                            Scan to open the tribute page and leave a memory.
+                        </p>
+                        <div className="w-full flex items-center gap-2 rounded-lg border px-3 py-2 bg-muted/40 overflow-hidden">
+                            <span className="flex-1 text-xs text-muted-foreground truncate min-w-0">{tributeUrl}</span>
+                            <Button size="sm" variant="ghost" className="shrink-0 h-6 px-2" onClick={handleCopy}>
+                                {copied
+                                    ? <Check className="h-3.5 w-3.5 text-green-500" />
+                                    : <Copy className="h-3.5 w-3.5" />
+                                }
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </MemberLayout>
     );
 }

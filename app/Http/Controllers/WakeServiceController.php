@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\WakeService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class WakeServiceController extends Controller
 {
@@ -12,15 +13,9 @@ class WakeServiceController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return Inertia::render('admin/wake-services/index', [
+            'services' => WakeService::orderBy('name')->get(),
+        ]);
     }
 
     /**
@@ -28,23 +23,15 @@ class WakeServiceController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:1000'],
+            'price' => ['required', 'numeric', 'min:0'],
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(WakeService $wakeService)
-    {
-        //
-    }
+        WakeService::create($validated);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(WakeService $wakeService)
-    {
-        //
+        return redirect()->back();
     }
 
     /**
@@ -52,7 +39,15 @@ class WakeServiceController extends Controller
      */
     public function update(Request $request, WakeService $wakeService)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:1000'],
+            'price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $wakeService->update($validated);
+
+        return redirect()->back();
     }
 
     /**
@@ -60,6 +55,10 @@ class WakeServiceController extends Controller
      */
     public function destroy(WakeService $wakeService)
     {
-        //
+        $wakeService->schedules()->detach();
+        $wakeService->packages()->detach();
+        $wakeService->delete();
+
+        return redirect()->back();
     }
 }
