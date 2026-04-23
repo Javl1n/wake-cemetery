@@ -1,14 +1,3 @@
-export interface SectionGeometry {
-    type: 'Feature';
-    geometry: {
-        type: 'Polygon' | 'LineString';
-        coordinates: number[][] | number[][][];
-    };
-    properties: {
-        geometryType: 'polygon' | 'line';
-    };
-}
-
 export interface CemeterySection {
     id: number;
     name: string;
@@ -19,8 +8,6 @@ export interface CemeterySection {
     available_plots?: number;
     plots_count?: number;
     occupied_plots_count?: number;
-    geometry?: SectionGeometry | null;
-    geometry_type?: 'polygon' | 'line' | null;
 }
 
 export interface Deceased {
@@ -48,6 +35,20 @@ export interface CemeteryPlot {
     beneficiary?: { id: number; name: string } | null;
 }
 
+export interface CemeteryEvent {
+    id: number;
+    title: string;
+    type: 'burial' | 'anniversary' | 'memorial' | 'ceremony' | 'other';
+    description: string | null;
+    latitude: number;
+    longitude: number;
+    starts_at: string;
+    ends_at: string | null;
+    color: string;
+    created_by?: string;
+    is_active?: boolean;
+}
+
 export interface MapCoordinates {
     lat: number;
     lng: number;
@@ -55,6 +56,8 @@ export interface MapCoordinates {
 
 export interface CemeteryMapPageProps {
     sections: CemeterySection[];
+    plots: CemeteryPlot[];
+    events: CemeteryEvent[];
     mapboxToken: string;
     centerCoordinates: MapCoordinates;
     initialZoom: number;

@@ -135,6 +135,17 @@ export interface WakeSchedule {
         obituary?: {
             tribute_token: string;
         } | null;
+        cemetery_plot?: {
+            id: number;
+            plot_number: string;
+            status: 'reserved' | 'occupied';
+            section: {
+                id: number;
+                name: string;
+                code: string;
+                color: string;
+            };
+        } | null;
     };
     room: WakeRoom;
     package: WakePackage;

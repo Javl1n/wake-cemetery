@@ -24,7 +24,8 @@ class CemeteryPlotController extends Controller
         // Load ALL plots (not just occupied) for admin view
         $plots = CemeteryPlot::with([
             'section:id,name,code,color',
-            'deceased.member.user:id,name',
+            'deceased:id,beneficiary_id,date_of_death',
+            'deceased.beneficiary:id,name',
         ])
             ->get()
             ->map(function ($plot) {
@@ -44,17 +45,17 @@ class CemeteryPlotController extends Controller
                     ],
                     'deceased' => $plot->deceased ? [
                         'id' => $plot->deceased->id,
-                        'name' => $plot->deceased->member?->user?->name ?? 'Unknown',
+                        'name' => $plot->deceased->beneficiary->name,
                         'date_of_death' => $plot->deceased->date_of_death->format('F d, Y'),
                     ] : null,
                 ];
             });
 
         // Load deceased list for form dropdown
-        $deceased = Deceased::with('member.user')->get()->map(function ($d) {
+        $deceased = Deceased::with('beneficiary:id,name')->get()->map(function ($d) {
             return [
                 'id' => $d->id,
-                'name' => $d->member?->user?->name ?? 'Unknown',
+                'name' => $d->beneficiary->name,
                 'date_of_death' => $d->date_of_death->format('F d, Y'),
             ];
         });

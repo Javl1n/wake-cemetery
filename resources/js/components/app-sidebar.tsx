@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Map, MapPinHouseIcon, CalendarCheck, Package, Wrench, UserCog, ShieldCheck, TriangleAlert } from 'lucide-react';
+import { LayoutGrid, Map, MapPinHouseIcon, CalendarCheck, Package, Wrench, UserCog, ShieldCheck, TriangleAlert, CalendarDays } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -41,6 +41,11 @@ const cemeteryNavItems: NavItem[] = [
         title: 'Maintenance',
         icon: TriangleAlert,
         href: '/cemetery-maintenance',
+    },
+    {
+        title: 'Event Markers',
+        icon: CalendarDays,
+        href: '/cemetery-events',
     },
 ];
 

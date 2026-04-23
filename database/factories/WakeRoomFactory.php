@@ -17,7 +17,12 @@ class WakeRoomFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'code' => fake()->unique()->bothify('ROOM-##'),
+            'name' => fake()->words(2, true),
+            'description' => fake()->sentence(),
+            'capacity' => fake()->numberBetween(20, 100),
+            'hourly_rate' => fake()->randomFloat(2, 100, 500),
+            'status' => 'active',
         ];
     }
 }

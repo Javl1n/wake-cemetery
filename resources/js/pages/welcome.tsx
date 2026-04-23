@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import visitor from '@/routes/visitor';
 import { Navbar5 } from '@/components/navbar5';
 import { Hero } from '@/components/background-pattern2';
 import { Footer7 } from '@/components/footer7';
@@ -33,6 +34,34 @@ export default function Welcome({
     };
 
     const [isModalOpen, setIsModalOpen] = useState(showInsuranceModal);
+
+    useEffect(() => {
+        if (sessionStorage.getItem('visitor_pinged')) {
+            return;
+        }
+        sessionStorage.setItem('visitor_pinged', '1');
+
+        const sendPing = (latitude?: number, longitude?: number) => {
+            fetch(visitor.ping().url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                },
+                body: JSON.stringify({ latitude, longitude }),
+            }).catch(() => {});
+        };
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => sendPing(pos.coords.latitude, pos.coords.longitude),
+                () => sendPing(),
+                { timeout: 8000 },
+            );
+        } else {
+            sendPing();
+        }
+    }, []);
 
     return (
         <>

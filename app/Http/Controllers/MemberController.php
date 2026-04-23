@@ -20,6 +20,25 @@ class MemberController extends Controller
     }
 
     /**
+     * Show the member insurance coverage visualization.
+     */
+    public function insurance(Request $request)
+    {
+        $user = $request->user()->load([
+            'member.subscription.insurance',
+            'member.subscription.beneficiaries',
+        ]);
+
+        $member = $user->member;
+
+        return inertia()->render('members/insurance', [
+            'member' => $member,
+            'subscription' => $member?->subscription,
+            'beneficiaries' => $member?->subscription?->beneficiaries ?? [],
+        ]);
+    }
+
+    /**
      * Show the member welcome page with services.
      */
     public function welcome()

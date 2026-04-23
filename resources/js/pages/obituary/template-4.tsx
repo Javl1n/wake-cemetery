@@ -82,17 +82,6 @@ export default function ObituaryTemplate4({ obituary, deceased }: ObituaryPagePr
                             <p className="text-sm text-rose-400 capitalize mt-1">{deceased.beneficiary.relationship}</p>
                         </div>
                     </section>
-
-                    {/* Tribute link */}
-                    <div className="text-center space-y-2">
-                        <p className="text-sm text-rose-400">Leave a tribute or share a memory</p>
-                        <a
-                            href={`/tribute/${obituary.tribute_token}`}
-                            className="inline-block text-sm font-medium text-rose-600 underline underline-offset-4 hover:text-rose-800 transition-colors"
-                        >
-                            Visit the Tribute Page →
-                        </a>
-                    </div>
                 </div>
 
                 {/* Decorative bottom border */}

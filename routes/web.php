@@ -3,11 +3,14 @@
 use App\Http\Controllers\CemeteryMapController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\VisitorPingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 // Guests
+Route::post('visitor-ping', VisitorPingController::class)->name('visitor.ping');
+
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
@@ -37,6 +40,11 @@ Route::get('dashboard', function () {
 
     $memberCount = App\Models\Member::count();
     $lowStockCount = App\Models\InventoryItem::where('available', true)->where('stock', '<=', 5)->count();
+
+    $visitorStats = [
+        'today_total' => App\Models\VisitorLog::today()->count(),
+        'today_near' => App\Models\VisitorLog::today()->nearCemetery()->count(),
+    ];
 
     $recentSchedules = App\Models\WakeSchedule::with([
         'deceased.beneficiary',
@@ -84,6 +92,7 @@ Route::get('dashboard', function () {
         'lowStockCount' => $lowStockCount,
         'recentSchedules' => $recentSchedules,
         'activeRooms' => $activeRooms,
+        'visitorStats' => $visitorStats,
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -93,6 +102,7 @@ Route::get('dashboard', function () {
 Route::name('members.')->prefix('/member')->controller(MemberController::class)->group(function () {
     Route::get('/welcome', 'welcome')->name('welcome')->middleware(['auth', 'verified', 'role:member']);
     Route::get('/dashboard', 'dashboard')->name('dashboard')->middleware(['auth', 'verified', 'role:member']);
+    Route::get('/insurance', 'insurance')->name('insurance')->middleware(['auth', 'verified', 'role:member']);
     Route::get('register', 'create')->name('create')->middleware(['role:member']);
     Route::post('/', 'store')->name('store')->middleware(['role:member']);
 });
@@ -100,6 +110,7 @@ Route::name('members.')->prefix('/member')->controller(MemberController::class)-
 Route::middleware(['auth', 'verified', 'role:member'])->prefix('/member')->name('members.')->group(function () {
     Route::get('/wake-schedules', [App\Http\Controllers\MemberWakeScheduleController::class, 'index'])->name('wake-schedules.index');
     Route::post('/wake-schedules/{wakeSchedule}/orders', [App\Http\Controllers\MemberWakeScheduleController::class, 'storeOrder'])->name('wake-schedules.orders.store');
+    Route::post('/wake-schedules/{wakeSchedule}/reserve-plot', [App\Http\Controllers\MemberWakeScheduleController::class, 'reservePlot'])->name('wake-schedules.reserve-plot');
 });
 
 // Member obituary management
@@ -145,6 +156,7 @@ Route::middleware(['auth', 'verified', 'role:admin,staff'])->name('subscriptions
 Route::middleware(['auth', 'verified', 'role:admin,staff'])->group(function () {
     Route::resource('cemetery-sections', App\Http\Controllers\CemeterySectionController::class)->except(['show', 'create', 'edit']);
     Route::resource('cemetery-plots', App\Http\Controllers\CemeteryPlotController::class)->except(['show', 'create', 'edit']);
+    Route::resource('cemetery-events', App\Http\Controllers\CemeteryEventController::class)->except(['show', 'create', 'edit']);
     Route::patch('cemetery-plots/{cemeteryPlot}/flag-maintenance', [App\Http\Controllers\CemeteryPlotController::class, 'flagMaintenance'])->name('cemetery-plots.flag-maintenance');
     Route::patch('cemetery-plots/{cemeteryPlot}/resolve-maintenance', [App\Http\Controllers\CemeteryPlotController::class, 'resolveMaintenance'])->name('cemetery-plots.resolve-maintenance');
     Route::get('cemetery-maintenance', [App\Http\Controllers\CemeteryMaintenanceController::class, 'index'])->name('cemetery-maintenance.index');

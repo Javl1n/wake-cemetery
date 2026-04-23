@@ -15,8 +15,6 @@ class CemeterySection extends Model
         'code',
         'description',
         'color',
-        'geometry',
-        'geometry_type',
         'total_plots',
         'available_plots',
     ];
@@ -26,7 +24,6 @@ class CemeterySection extends Model
         return [
             'total_plots' => 'integer',
             'available_plots' => 'integer',
-            'geometry' => 'array',
         ];
     }
 

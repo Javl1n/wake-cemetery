@@ -100,6 +100,17 @@ const Navbar5 = ({ className }: Navbar5Props) => {
                                     Wake Schedules
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
+                            <NavigationMenuItem>
+                                <NavigationMenuLink
+                                    href="/member/insurance"
+                                    className={cn(
+                                        navigationMenuTriggerStyle(),
+                                        isActive("/member/insurance") && "bg-primary text-secondary font-medium"
+                                    )}
+                                >
+                                    Insurance
+                                </NavigationMenuLink>
+                            </NavigationMenuItem>
                             {/* <NavigationMenuItem>
                                 <NavigationMenuLink
                                     href="#"
@@ -164,19 +175,28 @@ const Navbar5 = ({ className }: Navbar5Props) => {
                             </SheetHeader>
                             <div className="flex flex-col p-4">
                                 <div className="flex flex-col gap-6">
-                                    <a href="#" className="font-medium">
-                                        Templates
+                                    <a href={auth.user ? "/member/dashboard" : "/"} className={cn("font-medium", isActive("/member/dashboard") && "text-primary")}>
+                                        Home
                                     </a>
-                                    <a href="#" className="font-medium">
-                                        Blog
+                                    <a href="/cemetery/map" className={cn("font-medium", isActive("/cemetery/map") && "text-primary")}>
+                                        Cemetery Map
                                     </a>
-                                    <a href="#" className="font-medium">
-                                        Pricing
+                                    <a href="/member/wake-schedules" className={cn("font-medium", isActive("/member/wake-schedules") && "text-primary")}>
+                                        Wake Schedules
+                                    </a>
+                                    <a href="/member/insurance" className={cn("font-medium", isActive("/member/insurance") && "text-primary")}>
+                                        Insurance
                                     </a>
                                 </div>
                                 <div className="mt-6 flex flex-col gap-4">
-                                    <Button variant="outline" onClick={() => router.visit('/login')}>Log in</Button>
-                                    <Button onClick={() => router.visit('/register')}>Get Started</Button>
+                                    {auth.user ? (
+                                        <Button variant="outline" onClick={() => router.post('/logout')}>Log out</Button>
+                                    ) : (
+                                        <>
+                                            <Button variant="outline" onClick={() => router.visit('/login')}>Log in</Button>
+                                            <Button onClick={() => router.visit('/register')}>Get Started</Button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </SheetContent>

@@ -450,6 +450,12 @@ export default function MemberDashboard({
                             <CardTitle className="text-base">Quick Links</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
+                            <Link href="/member/insurance" className="block">
+                                <Button variant="outline" className="w-full justify-start">
+                                    <ShieldCheck className="h-4 w-4 mr-2" />
+                                    Insurance Coverage
+                                </Button>
+                            </Link>
                             <Link href="/member/wake-schedules" className="block">
                                 <Button variant="outline" className="w-full justify-start">
                                     <Calendar className="h-4 w-4 mr-2" />

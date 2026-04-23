@@ -300,6 +300,7 @@ export default function PlotFormDialog({
                                     <Marker
                                         latitude={data.latitude}
                                         longitude={data.longitude}
+                                        anchor="bottom"
                                         draggable
                                         onDragEnd={(event) => {
                                             setData({
@@ -309,10 +310,7 @@ export default function PlotFormDialog({
                                             });
                                         }}
                                     >
-                                        <MapPin
-                                            className="h-8 w-8 text-red-500 fill-red-500/50"
-                                            style={{ transform: 'translate(-50%, -100%)' }}
-                                        />
+                                        <MapPin className="h-8 w-8 text-red-500 fill-red-500/50" />
                                     </Marker>
                                 </Map>
                             </div>

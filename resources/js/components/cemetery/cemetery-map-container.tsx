@@ -1,51 +1,48 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Map, {
     FullscreenControl,
-    Layer,
     MapLayerMouseEvent,
     Marker,
     NavigationControl,
     Popup,
-    Source,
 } from 'react-map-gl/mapbox';
-import { CemeteryPlot, CemeterySection, MapCoordinates } from '@/types/cemetery';
-import { AlertTriangle, MapPin } from 'lucide-react';
+import { CemeteryEvent, CemeteryPlot, MapCoordinates } from '@/types/cemetery';
+import { AlertTriangle, CalendarDays, MapPin } from 'lucide-react';
 import PlotDetailPopup from './plot-detail-popup';
+import EventMarkerPopup from './event-marker-popup';
 
 interface CemeteryMapContainerProps {
     plots?: CemeteryPlot[];
-    sections?: CemeterySection[];
-    showSectionBoundaries?: boolean;
-    selectedSection?: CemeterySection | null;
+    events?: CemeteryEvent[];
     mapboxToken: string;
     center: MapCoordinates;
     zoom: number;
     selectedPlot?: CemeteryPlot | null;
     onPlotClick?: (plot: CemeteryPlot | null) => void;
-    maintenanceMode?: boolean;
+    selectedEvent?: CemeteryEvent | null;
+    onEventClick?: (event: CemeteryEvent | null) => void;
+    placementMode?: boolean;
     onEmptyMapClick?: (coords: MapCoordinates) => void;
     showAdminActions?: boolean;
     onFlagMaintenance?: (plot: CemeteryPlot) => void;
     onResolveMaintenance?: (plot: CemeteryPlot) => void;
-    onSectionClick?: (section: CemeterySection) => void;
 }
 
 export default function CemeteryMapContainer({
     plots = [],
-    sections = [],
-    showSectionBoundaries = true,
-    selectedSection = null,
+    events = [],
     mapboxToken,
     center,
     zoom,
     selectedPlot = null,
     onPlotClick,
-    maintenanceMode = false,
+    selectedEvent = null,
+    onEventClick,
+    placementMode = false,
     onEmptyMapClick,
     showAdminActions = false,
     onFlagMaintenance,
     onResolveMaintenance,
-    onSectionClick,
 }: CemeteryMapContainerProps) {
     const mapRef = useRef<any>(null);
     const [viewState, setViewState] = useState({
@@ -53,7 +50,6 @@ export default function CemeteryMapContainer({
         longitude: center.lng,
         zoom: zoom,
     });
-    const [hoveredSectionId, setHoveredSectionId] = useState<number | null>(null);
 
     useEffect(() => {
         if (selectedPlot && mapRef.current) {
@@ -65,62 +61,31 @@ export default function CemeteryMapContainer({
         }
     }, [selectedPlot]);
 
+    useEffect(() => {
+        if (selectedEvent && mapRef.current) {
+            mapRef.current.flyTo({
+                center: [selectedEvent.longitude, selectedEvent.latitude],
+                zoom: 18,
+                duration: 1500,
+            });
+        }
+    }, [selectedEvent]);
+
     const handleMapClick = useCallback(
         (e: MapLayerMouseEvent) => {
-            if (onSectionClick && e.features && e.features.length > 0) {
-                const sectionId = e.features[0].properties?.sectionId as number | undefined;
-                const section = sections.find((s) => s.id === sectionId);
-                if (section) {
-                    onSectionClick(section);
-                    return;
-                }
-            }
-
-            if (!maintenanceMode || !onEmptyMapClick) {
+            if (!placementMode || !onEmptyMapClick) {
                 return;
             }
-            if ((e.originalEvent.target as HTMLElement).closest('[data-plot-marker]')) {
+            if ((e.originalEvent.target as HTMLElement).closest('[data-plot-marker]') ||
+                (e.originalEvent.target as HTMLElement).closest('[data-event-marker]')) {
                 return;
             }
             onEmptyMapClick({ lat: e.lngLat.lat, lng: e.lngLat.lng });
         },
-        [onSectionClick, sections, maintenanceMode, onEmptyMapClick],
+        [placementMode, onEmptyMapClick],
     );
 
-    const handleMouseMove = useCallback(
-        (e: MapLayerMouseEvent) => {
-            if (!onSectionClick) {
-                return;
-            }
-            if (e.features && e.features.length > 0) {
-                setHoveredSectionId(e.features[0].properties?.sectionId ?? null);
-            } else {
-                setHoveredSectionId(null);
-            }
-        },
-        [onSectionClick],
-    );
-
-    const sectionFeatures = sections
-        .filter((s) => s.geometry)
-        .map((section) => ({
-            ...section.geometry!,
-            id: section.id,
-            properties: {
-                ...section.geometry!.properties,
-                sectionId: section.id,
-                name: section.name,
-                code: section.code,
-                color: section.color,
-            },
-        }));
-
-    const cursor =
-        hoveredSectionId && onSectionClick
-            ? 'pointer'
-            : maintenanceMode
-              ? 'crosshair'
-              : undefined;
+    const cursor = placementMode ? 'crosshair' : undefined;
 
     return (
         <div className="relative w-full h-full">
@@ -131,52 +96,10 @@ export default function CemeteryMapContainer({
                 mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
                 mapboxAccessToken={mapboxToken}
                 style={{ width: '100%', height: '100%', cursor }}
-                interactiveLayerIds={onSectionClick ? ['section-boundaries-fill'] : []}
                 onClick={handleMapClick}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={() => setHoveredSectionId(null)}
             >
                 <NavigationControl position="top-right" />
                 <FullscreenControl position="top-right" />
-
-                {showSectionBoundaries && sectionFeatures.length > 0 && (
-                    <Source
-                        id="section-boundaries"
-                        type="geojson"
-                        data={{ type: 'FeatureCollection', features: sectionFeatures }}
-                    >
-                        <Layer
-                            id="section-boundaries-fill"
-                            type="fill"
-                            paint={{
-                                'fill-color': ['get', 'color'],
-                                'fill-opacity': [
-                                    'case',
-                                    ['==', ['get', 'sectionId'], hoveredSectionId ?? -1],
-                                    0.35,
-                                    ['==', ['get', 'sectionId'], selectedSection?.id ?? -1],
-                                    0.3,
-                                    0.15,
-                                ],
-                            }}
-                            filter={['==', ['get', 'geometryType'], 'polygon']}
-                        />
-                        <Layer
-                            id="section-boundaries-line"
-                            type="line"
-                            paint={{
-                                'line-color': ['get', 'color'],
-                                'line-width': [
-                                    'case',
-                                    ['==', ['get', 'sectionId'], selectedSection?.id ?? -1],
-                                    3,
-                                    2,
-                                ],
-                                'line-opacity': 0.8,
-                            }}
-                        />
-                    </Source>
-                )}
 
                 {plots.map((plot) => (
                     <Marker
@@ -212,6 +135,31 @@ export default function CemeteryMapContainer({
                     </Marker>
                 ))}
 
+                {events.map((event) => (
+                    <Marker
+                        key={`event-${event.id}`}
+                        latitude={event.latitude}
+                        longitude={event.longitude}
+                        anchor="bottom"
+                        onClick={(e) => {
+                            e.originalEvent.stopPropagation();
+                            onEventClick?.(event);
+                        }}
+                    >
+                        <div
+                            data-event-marker
+                            className="cursor-pointer transition-transform hover:scale-110"
+                        >
+                            <div
+                                className="flex items-center justify-center w-9 h-9 rounded-full shadow-lg border-2 border-white"
+                                style={{ backgroundColor: event.color }}
+                            >
+                                <CalendarDays size={18} stroke="white" strokeWidth={2} />
+                            </div>
+                        </div>
+                    </Marker>
+                ))}
+
                 {selectedPlot && (
                     <Popup
                         latitude={selectedPlot.latitude}
@@ -228,6 +176,20 @@ export default function CemeteryMapContainer({
                             onFlagMaintenance={onFlagMaintenance}
                             onResolveMaintenance={onResolveMaintenance}
                         />
+                    </Popup>
+                )}
+
+                {selectedEvent && (
+                    <Popup
+                        latitude={selectedEvent.latitude}
+                        longitude={selectedEvent.longitude}
+                        anchor="top"
+                        onClose={() => onEventClick?.(null)}
+                        closeButton={true}
+                        closeOnClick={false}
+                        className="cemetery-popup"
+                    >
+                        <EventMarkerPopup event={selectedEvent} />
                     </Popup>
                 )}
             </Map>

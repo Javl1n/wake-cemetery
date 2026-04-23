@@ -68,17 +68,6 @@ export default function ObituaryTemplate3({ obituary, deceased }: ObituaryPagePr
                     </section>
 
                     <hr className="border-zinc-200" />
-
-                    {/* Tribute link */}
-                    <div className="text-center space-y-2">
-                        <p className="text-sm text-zinc-500">Leave a tribute or share a memory</p>
-                        <a
-                            href={`/tribute/${obituary.tribute_token}`}
-                            className="inline-block text-sm font-medium text-zinc-700 underline underline-offset-4 hover:text-zinc-900 transition-colors"
-                        >
-                            Visit the Tribute Page →
-                        </a>
-                    </div>
                 </div>
 
                 <footer className="text-center py-6 text-xs text-zinc-400 border-t border-zinc-200 mt-8">

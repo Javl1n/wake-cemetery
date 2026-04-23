@@ -20,6 +20,7 @@ import {
     Package,
     Users,
     UserCog,
+    Eye,
 } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -62,6 +63,11 @@ interface ActiveRoom {
     active_count: number;
 }
 
+interface VisitorStats {
+    today_total: number;
+    today_near: number;
+}
+
 interface Props {
     scheduleStats: ScheduleStats;
     memberCount: number;
@@ -69,6 +75,7 @@ interface Props {
     lowStockCount: number;
     recentSchedules: RecentSchedule[];
     activeRooms: ActiveRoom[];
+    visitorStats: VisitorStats;
 }
 
 const scheduleStatusColors: Record<string, string> = {
@@ -86,6 +93,7 @@ export default function AdminDashboard({
     lowStockCount,
     recentSchedules,
     activeRooms,
+    visitorStats,
 }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -99,7 +107,7 @@ export default function AdminDashboard({
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
@@ -156,6 +164,21 @@ export default function AdminDashboard({
                         <CardContent>
                             <p className="text-3xl font-bold">{lowStockCount}</p>
                             <p className="text-muted-foreground mt-1 text-xs">items low on stock</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+                                <Eye className="h-4 w-4 text-teal-500" />
+                                Today's Visitors
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-bold">{visitorStats.today_near}</p>
+                            <p className="text-muted-foreground mt-1 text-xs">
+                                near cemetery · {visitorStats.today_total} total
+                            </p>
                         </CardContent>
                     </Card>
                 </div>

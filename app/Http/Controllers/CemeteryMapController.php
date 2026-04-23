@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CemeteryEvent;
 use App\Models\CemeteryPlot;
 use App\Models\CemeterySection;
 use Illuminate\Http\Request;
@@ -17,8 +18,59 @@ class CemeteryMapController extends Controller
             ->orderBy('code')
             ->get();
 
+        $plots = CemeteryPlot::with([
+            'section:id,name,code,color',
+            'deceased:id,beneficiary_id,date_of_death,cause_of_death',
+            'deceased.beneficiary:id,name',
+            'beneficiary:id,name',
+        ])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get()
+            ->map(fn (CemeteryPlot $plot) => [
+                'id' => $plot->id,
+                'plot_number' => $plot->plot_number,
+                'latitude' => (float) $plot->latitude,
+                'longitude' => (float) $plot->longitude,
+                'status' => $plot->status,
+                'burial_date' => $plot->burial_date?->format('F d, Y'),
+                'notes' => $plot->notes,
+                'section' => [
+                    'id' => $plot->section->id,
+                    'name' => $plot->section->name,
+                    'code' => $plot->section->code,
+                    'color' => $plot->section->color,
+                ],
+                'deceased' => $plot->deceased ? [
+                    'id' => $plot->deceased->id,
+                    'name' => $plot->deceased->beneficiary->name,
+                    'date_of_death' => $plot->deceased->date_of_death->format('F d, Y'),
+                    'cause_of_death' => $plot->deceased->cause_of_death,
+                ] : null,
+                'beneficiary' => $plot->beneficiary ? [
+                    'id' => $plot->beneficiary->id,
+                    'name' => $plot->beneficiary->name,
+                ] : null,
+            ]);
+
+        $events = CemeteryEvent::active()
+            ->get()
+            ->map(fn (CemeteryEvent $event) => [
+                'id' => $event->id,
+                'title' => $event->title,
+                'type' => $event->type,
+                'description' => $event->description,
+                'latitude' => (float) $event->latitude,
+                'longitude' => (float) $event->longitude,
+                'starts_at' => $event->starts_at->toISOString(),
+                'ends_at' => $event->ends_at?->toISOString(),
+                'color' => $event->color,
+            ]);
+
         return inertia()->render('cemetery/map', [
             'sections' => $sections,
+            'plots' => $plots,
+            'events' => $events,
             'mapboxToken' => config('services.mapbox.token'),
             'centerCoordinates' => [
                 'lat' => config('cemetery.center.latitude', 14.5995),
@@ -37,7 +89,8 @@ class CemeteryMapController extends Controller
 
         $plots = $section->plots()
             ->with([
-                'deceased.member.user:id,name',
+                'deceased:id,beneficiary_id,date_of_death,cause_of_death',
+                'deceased.beneficiary:id,name',
                 'beneficiary:id,name',
             ])
             ->orderBy('plot_number')
@@ -59,7 +112,7 @@ class CemeteryMapController extends Controller
                     ],
                     'deceased' => $plot->deceased ? [
                         'id' => $plot->deceased->id,
-                        'name' => $plot->deceased->member?->user?->name ?? 'Unknown',
+                        'name' => $plot->deceased->beneficiary->name,
                         'date_of_death' => $plot->deceased->date_of_death->format('F d, Y'),
                         'cause_of_death' => $plot->deceased->cause_of_death,
                     ] : null,
@@ -89,10 +142,11 @@ class CemeteryMapController extends Controller
 
         $plots = CemeteryPlot::with([
             'section:id,name,code,color',
-            'deceased.member.user:id,name',
+            'deceased:id,beneficiary_id,date_of_death',
+            'deceased.beneficiary:id,name',
         ])
             ->where('status', 'occupied')
-            ->whereHas('deceased.member.user', function ($q) use ($query) {
+            ->whereHas('deceased.beneficiary', function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%");
             })
             ->limit(10)
@@ -103,12 +157,12 @@ class CemeteryMapController extends Controller
                     'plot_number' => $plot->plot_number,
                     'latitude' => (float) $plot->latitude,
                     'longitude' => (float) $plot->longitude,
-                    'deceased_name' => $plot->deceased->member->user->name,
+                    'deceased_name' => $plot->deceased->beneficiary->name,
                     'section_name' => $plot->section->name,
                     'burial_date' => $plot->burial_date?->format('F d, Y'),
                     'deceased' => [
                         'id' => $plot->deceased->id,
-                        'name' => $plot->deceased->member->user->name,
+                        'name' => $plot->deceased->beneficiary->name,
                         'date_of_death' => $plot->deceased->date_of_death->format('F d, Y'),
                     ],
                     'section' => [

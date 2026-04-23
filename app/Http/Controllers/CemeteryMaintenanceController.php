@@ -16,7 +16,8 @@ class CemeteryMaintenanceController extends Controller
 
         $plots = CemeteryPlot::with([
             'section:id,name,code,color',
-            'deceased.member.user:id,name',
+            'deceased:id,beneficiary_id,date_of_death',
+            'deceased.beneficiary:id,name',
         ])
             ->get()
             ->map(function ($plot) {
@@ -36,7 +37,7 @@ class CemeteryMaintenanceController extends Controller
                     ],
                     'deceased' => $plot->deceased ? [
                         'id' => $plot->deceased->id,
-                        'name' => $plot->deceased->member?->user?->name ?? 'Unknown',
+                        'name' => $plot->deceased->beneficiary->name,
                         'date_of_death' => $plot->deceased->date_of_death->format('F d, Y'),
                     ] : null,
                 ];

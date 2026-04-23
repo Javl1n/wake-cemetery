@@ -1,25 +1,25 @@
 import { Head } from '@inertiajs/react';
-import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Navbar5 } from '@/components/navbar5';
-import { CemeteryMapPageProps, CemeterySection } from '@/types/cemetery';
+import { CemeteryEvent, CemeteryMapPageProps, CemeteryPlot } from '@/types/cemetery';
 import CemeteryMapContainer from '@/components/cemetery/cemetery-map-container';
 import MapLegend from '@/components/cemetery/map-legend';
+import PlotInfoDialog from '@/components/cemetery/plot-info-dialog';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Menu } from 'lucide-react';
 
 export default function CemeteryMap({
     sections,
+    plots,
+    events,
     mapboxToken,
     centerCoordinates,
     initialZoom,
 }: CemeteryMapPageProps) {
     const [open, setOpen] = useState(false);
-
-    const handleSectionClick = (section: CemeterySection) => {
-        router.visit(`/cemetery/sections/${section.id}`);
-    };
+    const [selectedPlot, setSelectedPlot] = useState<CemeteryPlot | null>(null);
+    const [selectedEvent, setSelectedEvent] = useState<CemeteryEvent | null>(null);
 
     return (
         <>
@@ -40,11 +40,14 @@ export default function CemeteryMap({
                 <main className="flex-1 relative">
                     <div className="absolute inset-0">
                         <CemeteryMapContainer
-                            sections={sections}
                             mapboxToken={mapboxToken}
                             center={centerCoordinates}
                             zoom={initialZoom}
-                            onSectionClick={handleSectionClick}
+                            plots={plots}
+                            events={events}
+                            onPlotClick={setSelectedPlot}
+                            selectedEvent={selectedEvent}
+                            onEventClick={setSelectedEvent}
                         />
                     </div>
 
@@ -60,17 +63,23 @@ export default function CemeteryMap({
                         </DrawerTrigger>
                         <DrawerContent className="max-h-[80vh]">
                             <div className="overflow-y-auto p-4">
-                                <MapLegend sections={sections} />
+                                <MapLegend sections={sections} events={events} />
                             </div>
                         </DrawerContent>
                     </Drawer>
 
                     {/* Desktop: Floating Legend */}
                     <div className="hidden md:block absolute top-4 left-4 z-10 w-72">
-                        <MapLegend sections={sections} />
+                        <MapLegend sections={sections} events={events} />
                     </div>
                 </main>
             </div>
+
+            <PlotInfoDialog
+                plot={selectedPlot}
+                open={selectedPlot !== null}
+                onClose={() => setSelectedPlot(null)}
+            />
         </>
     );
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CemeteryPlot;
+use App\Models\CemeterySection;
 use App\Models\InventoryItem;
 use App\Models\WakeSchedule;
 use Illuminate\Http\Request;
@@ -21,6 +23,7 @@ class MemberWakeScheduleController extends Controller
         $schedules = WakeSchedule::with([
             'deceased.beneficiary',
             'deceased.obituary',
+            'deceased.cemeteryPlot.section',
             'room',
             'package',
             'services',
@@ -36,10 +39,55 @@ class MemberWakeScheduleController extends Controller
             ->orderBy('name')
             ->get();
 
+        $availableSections = CemeterySection::with([
+            'plots' => fn ($q) => $q->where('status', 'available')->orderBy('plot_number'),
+        ])->get()->filter(fn ($s) => $s->plots->isNotEmpty())->values();
+
         return inertia()->render('members/wake-schedules/index', [
             'schedules' => $schedules,
             'inventoryItems' => $inventoryItems,
+            'availableSections' => $availableSections,
         ]);
+    }
+
+    /**
+     * Reserve a cemetery plot for the deceased on a member's wake schedule.
+     */
+    public function reservePlot(Request $request, WakeSchedule $wakeSchedule)
+    {
+        $member = $request->user()->member;
+
+        abort_if(! $member, 403);
+        abort_if(
+            $wakeSchedule->deceased->member_id !== $member->id,
+            403,
+            'You are not authorized to reserve a plot for this schedule.'
+        );
+        abort_if(
+            ! in_array($wakeSchedule->status, ['confirmed', 'in_progress']),
+            403,
+            'Plot reservation is only available for confirmed or in-progress schedules.'
+        );
+        abort_if(
+            $wakeSchedule->deceased->cemeteryPlot !== null,
+            422,
+            'A cemetery plot is already assigned for this deceased.'
+        );
+
+        $validated = $request->validate([
+            'plot_id' => 'required|exists:cemetery_plots,id',
+        ]);
+
+        $plot = CemeteryPlot::findOrFail($validated['plot_id']);
+
+        abort_if($plot->status !== 'available', 422, 'This plot is no longer available.');
+
+        $plot->update([
+            'status' => 'reserved',
+            'deceased_id' => $wakeSchedule->deceased_id,
+        ]);
+
+        return redirect()->back();
     }
 
     /**

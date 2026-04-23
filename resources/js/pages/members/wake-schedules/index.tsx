@@ -20,14 +20,29 @@ import {
 } from '@/components/ui/dialog';
 import MemberLayout from '@/layouts/member-layout';
 import OrderItemsDialog from '@/components/wake/member/order-items-dialog';
-import { Calendar, Package, ShoppingCart, ShieldCheck, Users, BookHeart, QrCode, ExternalLink, Copy, Check } from 'lucide-react';
+import ReservePlotDialog from '@/components/wake/member/reserve-plot-dialog';
+import { Calendar, Package, ShoppingCart, ShieldCheck, Users, BookHeart, QrCode, ExternalLink, Copy, Check, MapPin } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { WakeSchedule, InventoryItem } from '@/types/wake';
 
+interface AvailablePlot {
+    id: number;
+    plot_number: string;
+}
+
+interface SectionWithPlots {
+    id: number;
+    name: string;
+    code: string;
+    color: string;
+    plots: AvailablePlot[];
+}
+
 interface Props {
     schedules: WakeSchedule[];
     inventoryItems: InventoryItem[];
+    availableSections: SectionWithPlots[];
 }
 
 const statusColors: Record<string, string> = {
@@ -67,9 +82,10 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     );
 }
 
-export default function MemberWakeSchedulesIndex({ schedules, inventoryItems }: Props) {
+export default function MemberWakeSchedulesIndex({ schedules, inventoryItems, availableSections }: Props) {
     const [selected, setSelected] = useState<WakeSchedule | null>(null);
     const [orderOpen, setOrderOpen] = useState(false);
+    const [reservePlotOpen, setReservePlotOpen] = useState(false);
     const [qrOpen, setQrOpen] = useState(false);
     const [copied, setCopied] = useState(false);
 
@@ -87,6 +103,12 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems }: 
     const canOrder = selected
         ? ['confirmed', 'in_progress'].includes(selected.status)
         : false;
+
+    const canReservePlot = selected
+        ? ['confirmed', 'in_progress'].includes(selected.status)
+        : false;
+
+    const hasReservedPlot = selected ? !!selected.deceased.cemetery_plot : false;
 
     return (
         <MemberLayout title="Wake Schedules">
@@ -341,6 +363,37 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems }: 
                                             </section>
                                         </>
                                     )}
+
+                                    {/* Cemetery Plot */}
+                                    {selected.deceased.cemetery_plot && (
+                                        <>
+                                            <Separator />
+                                            <section className="space-y-2">
+                                                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                                    <MapPin className="h-3.5 w-3.5" />
+                                                    Cemetery Plot
+                                                </h3>
+                                                <div className="space-y-1.5">
+                                                    <InfoRow label="Plot Number" value={selected.deceased.cemetery_plot.plot_number} />
+                                                    <InfoRow label="Section" value={selected.deceased.cemetery_plot.section.name} />
+                                                    <InfoRow
+                                                        label="Status"
+                                                        value={
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={selected.deceased.cemetery_plot.status === 'reserved'
+                                                                    ? 'bg-blue-500/10 text-blue-700 border-blue-500/20'
+                                                                    : 'bg-green-500/10 text-green-700 border-green-500/20'
+                                                                }
+                                                            >
+                                                                {selected.deceased.cemetery_plot.status === 'reserved' ? 'Reserved' : 'Occupied'}
+                                                            </Badge>
+                                                        }
+                                                    />
+                                                </div>
+                                            </section>
+                                        </>
+                                    )}
                                 </div>
                             </ScrollArea>
 
@@ -384,6 +437,27 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems }: 
                                     </Button>
                                 </Link>
 
+                                {canReservePlot && (
+                                    <Button
+                                        variant="outline"
+                                        className={`w-full ${hasReservedPlot ? 'border-green-500/40 bg-green-500/5 text-green-700 hover:bg-green-500/10 hover:text-green-700' : ''}`}
+                                        onClick={() => !hasReservedPlot && setReservePlotOpen(true)}
+                                        disabled={hasReservedPlot}
+                                    >
+                                        {hasReservedPlot ? (
+                                            <>
+                                                <Check className="h-4 w-4 mr-2" />
+                                                Cemetery Lot Reserved
+                                            </>
+                                        ) : (
+                                            <>
+                                                <MapPin className="h-4 w-4 mr-2" />
+                                                Reserve Cemetery Lot
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
+
                                 {canOrder && (
                                     <>
                                         <Button className="w-full" onClick={() => setOrderOpen(true)}>
@@ -413,6 +487,16 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems }: 
                     onClose={() => setOrderOpen(false)}
                     schedule={selected}
                     inventoryItems={inventoryItems}
+                />
+            )}
+
+            {/* Reserve Plot Dialog */}
+            {selected && (
+                <ReservePlotDialog
+                    open={reservePlotOpen}
+                    onClose={() => setReservePlotOpen(false)}
+                    schedule={selected}
+                    availableSections={availableSections}
                 />
             )}
 

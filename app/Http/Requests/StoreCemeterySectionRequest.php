@@ -29,31 +29,6 @@ class StoreCemeterySectionRequest extends FormRequest
             'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'total_plots' => 'required|integer|min:0',
             'available_plots' => 'required|integer|min:0',
-            'geometry' => [
-                'nullable',
-                'array',
-                function ($attribute, $value, $fail) {
-                    if ($value) {
-                        if (! isset($value['type'], $value['geometry'])) {
-                            $fail('Invalid GeoJSON format');
-
-                            return;
-                        }
-
-                        $coords = $value['geometry']['coordinates'] ?? [];
-                        $type = $value['geometry']['type'] ?? null;
-
-                        if ($type === 'Polygon' && (! isset($coords[0]) || count($coords[0]) < 4)) {
-                            $fail('Polygon must have at least 3 points (4 with closure)');
-                        }
-
-                        if ($type === 'LineString' && count($coords) < 2) {
-                            $fail('Line must have at least 2 points');
-                        }
-                    }
-                },
-            ],
-            'geometry_type' => 'nullable|in:polygon,line',
         ];
     }
 }

@@ -34,7 +34,6 @@ export default function CemeterySectionsIndex({
 }: CemeterySectionsPageProps) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedSection, setSelectedSection] = useState<CemeterySection | null>(null);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [editingSection, setEditingSection] = useState<CemeterySection | null>(null);
 
@@ -55,10 +54,6 @@ export default function CemeterySectionsIndex({
         }
     };
 
-    const highlightSection = (section: CemeterySection) => {
-        setSelectedSection(section);
-    };
-
     const handleCloseEdit = () => setEditingSection(null);
 
     return (
@@ -68,10 +63,6 @@ export default function CemeterySectionsIndex({
                     href="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css"
                     rel="stylesheet"
                 />
-                <link
-                    rel="stylesheet"
-                    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css"
-                />
             </Head>
 
             <div className="min-h-screen flex flex-col">
@@ -79,9 +70,6 @@ export default function CemeterySectionsIndex({
                 <div className="absolute inset-0">
                     <CemeteryMapContainer
                         plots={plots}
-                        sections={sections}
-                        showSectionBoundaries={true}
-                        selectedSection={selectedSection}
                         mapboxToken={mapboxToken}
                         center={centerCoordinates}
                         zoom={initialZoom}
@@ -124,7 +112,6 @@ export default function CemeterySectionsIndex({
                                 <Card
                                     key={section.id}
                                     className="backdrop-blur-sm bg-background/95 hover:bg-accent/20 cursor-pointer transition-colors"
-                                    onClick={() => highlightSection(section)}
                                 >
                                     <CardContent className="p-4">
                                         <div className="flex items-center gap-3">
@@ -171,7 +158,6 @@ export default function CemeterySectionsIndex({
                     </DrawerTrigger>
                     <DrawerContent className="max-h-[80vh]">
                         <div className="overflow-y-auto p-4 space-y-4">
-                            {/* Same content as desktop floating panel */}
                             <Card>
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
@@ -199,10 +185,7 @@ export default function CemeterySectionsIndex({
                                     <Card
                                         key={section.id}
                                         className="hover:bg-accent/20 cursor-pointer"
-                                        onClick={() => {
-                                            highlightSection(section);
-                                            setOpen(false);
-                                        }}
+                                        onClick={() => setOpen(false)}
                                     >
                                         <CardContent className="p-4">
                                             <div className="flex items-center gap-3">
@@ -244,8 +227,6 @@ export default function CemeterySectionsIndex({
                 <CreateSectionDialog
                     open={showCreateDialog}
                     onClose={() => setShowCreateDialog(false)}
-                    mapboxToken={mapboxToken}
-                    centerCoordinates={centerCoordinates}
                 />
 
                 {editingSection && (
@@ -254,8 +235,6 @@ export default function CemeterySectionsIndex({
                         section={editingSection}
                         open={true}
                         onClose={handleCloseEdit}
-                        mapboxToken={mapboxToken}
-                        centerCoordinates={centerCoordinates}
                     />
                 )}
             </div>

@@ -66,17 +66,6 @@ export default function ObituaryTemplate1({ obituary, deceased }: ObituaryPagePr
                         <p className="text-xl font-semibold text-stone-800">{deceased.beneficiary.name}</p>
                         <p className="text-stone-500 capitalize">{deceased.beneficiary.relationship}</p>
                     </section>
-
-                    {/* Tribute link */}
-                    <div className="text-center space-y-2">
-                        <p className="text-sm text-stone-500">Share your memories</p>
-                        <a
-                            href={`/tribute/${obituary.tribute_token}`}
-                            className="inline-block text-sm font-medium text-stone-700 underline underline-offset-4 hover:text-stone-900 transition-colors"
-                        >
-                            Visit the Tribute Page →
-                        </a>
-                    </div>
                 </div>
 
                 <footer className="text-center py-8 text-xs text-stone-400 border-t border-stone-200">
