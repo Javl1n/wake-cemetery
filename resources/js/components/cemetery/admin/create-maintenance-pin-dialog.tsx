@@ -37,10 +37,9 @@ export default function CreateMaintenancePinDialog({
 }: CreateMaintenancePinDialogProps) {
     const { data, setData, post, processing, errors, reset } = useForm({
         section_id: '' as string | number,
-        plot_number: `MAINT-${Date.now()}`,
+        label: `MAINT-${Date.now()}`,
         latitude: coordinates?.lat ?? 0,
         longitude: coordinates?.lng ?? 0,
-        status: 'maintenance' as const,
         notes: '',
     });
 
@@ -48,7 +47,7 @@ export default function CreateMaintenancePinDialog({
         if (open) {
             setData((prev) => ({
                 ...prev,
-                plot_number: `MAINT-${Date.now()}`,
+                label: `MAINT-${Date.now()}`,
                 latitude: coordinates?.lat ?? prev.latitude,
                 longitude: coordinates?.lng ?? prev.longitude,
             }));
@@ -57,7 +56,7 @@ export default function CreateMaintenancePinDialog({
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post('/cemetery-plots', {
+        post('/maintenance-pins', {
             onSuccess: () => {
                 reset();
                 onClose();
@@ -108,14 +107,14 @@ export default function CreateMaintenancePinDialog({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Reference ID</Label>
+                            <Label>Label</Label>
                             <Input
-                                value={data.plot_number}
-                                onChange={(e) => setData('plot_number', e.target.value)}
+                                value={data.label}
+                                onChange={(e) => setData('label', e.target.value)}
                                 required
                             />
-                            {errors.plot_number && (
-                                <p className="text-sm text-destructive">{errors.plot_number}</p>
+                            {errors.label && (
+                                <p className="text-sm text-destructive">{errors.label}</p>
                             )}
                         </div>
 

@@ -10,7 +10,7 @@ import Map, {
     Source,
 } from 'react-map-gl/mapbox';
 import type { GeolocateResultEvent } from 'react-map-gl/mapbox';
-import { CemeteryEvent, CemeteryPlot, MapCoordinates } from '@/types/cemetery';
+import { CemeteryEvent, CemeteryPlot, MaintenancePin, MapCoordinates } from '@/types/cemetery';
 import { AlertTriangle, CalendarDays, MapPin } from 'lucide-react';
 import PlotDetailPopup from './plot-detail-popup';
 import EventMarkerPopup from './event-marker-popup';
@@ -18,6 +18,7 @@ import EventMarkerPopup from './event-marker-popup';
 interface CemeteryMapContainerProps {
     plots?: CemeteryPlot[];
     events?: CemeteryEvent[];
+    maintenancePins?: MaintenancePin[];
     mapboxToken: string;
     center: MapCoordinates;
     zoom: number;
@@ -38,6 +39,7 @@ interface CemeteryMapContainerProps {
 export default function CemeteryMapContainer({
     plots = [],
     events = [],
+    maintenancePins = [],
     mapboxToken,
     center,
     zoom,
@@ -208,6 +210,24 @@ export default function CemeteryMapContainer({
                             >
                                 <CalendarDays size={18} stroke="white" strokeWidth={2} />
                             </div>
+                        </div>
+                    </Marker>
+                ))}
+
+                {maintenancePins.map((pin) => (
+                    <Marker
+                        key={`pin-${pin.id}`}
+                        latitude={pin.latitude}
+                        longitude={pin.longitude}
+                        anchor="bottom"
+                    >
+                        <div className="transition-transform hover:scale-110">
+                            <AlertTriangle
+                                size={28}
+                                fill="#f97316"
+                                stroke="white"
+                                strokeWidth={1}
+                            />
                         </div>
                     </Marker>
                 ))}

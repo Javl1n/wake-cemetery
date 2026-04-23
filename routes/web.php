@@ -174,6 +174,9 @@ Route::middleware(['auth', 'verified', 'role:admin,staff'])->group(function () {
     Route::patch('cemetery-plots/{cemeteryPlot}/flag-maintenance', [App\Http\Controllers\CemeteryPlotController::class, 'flagMaintenance'])->name('cemetery-plots.flag-maintenance');
     Route::patch('cemetery-plots/{cemeteryPlot}/resolve-maintenance', [App\Http\Controllers\CemeteryPlotController::class, 'resolveMaintenance'])->name('cemetery-plots.resolve-maintenance');
     Route::get('cemetery-maintenance', [App\Http\Controllers\CemeteryMaintenanceController::class, 'index'])->name('cemetery-maintenance.index');
+    Route::post('maintenance-pins', [App\Http\Controllers\MaintenancePinController::class, 'store'])->name('maintenance-pins.store');
+    Route::patch('maintenance-pins/{maintenancePin}/resolve', [App\Http\Controllers\MaintenancePinController::class, 'resolve'])->name('maintenance-pins.resolve');
+    Route::delete('maintenance-pins/{maintenancePin}', [App\Http\Controllers\MaintenancePinController::class, 'destroy'])->name('maintenance-pins.destroy');
 
     Route::resource('inventory-items', App\Http\Controllers\InventoryItemController::class)->except(['show', 'create', 'edit']);
 

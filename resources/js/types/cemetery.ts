@@ -51,6 +51,21 @@ export interface CemeteryEvent {
     is_active?: boolean;
 }
 
+export interface MaintenancePin {
+    id: number;
+    label: string;
+    latitude: number;
+    longitude: number;
+    notes: string | null;
+    resolved_at: string | null;
+    section: {
+        id: number;
+        name: string;
+        code: string;
+        color: string;
+    } | null;
+}
+
 export interface MapCoordinates {
     lat: number;
     lng: number;

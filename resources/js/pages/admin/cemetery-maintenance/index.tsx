@@ -13,13 +13,14 @@ import {
 import CemeteryMapContainer from '@/components/cemetery/cemetery-map-container';
 import FlagMaintenanceDialog from '@/components/cemetery/admin/flag-maintenance-dialog';
 import CreateMaintenancePinDialog from '@/components/cemetery/admin/create-maintenance-pin-dialog';
-import type { CemeterySection, CemeteryPlot, MapCoordinates } from '@/types/cemetery';
+import type { CemeterySection, CemeteryPlot, MaintenancePin, MapCoordinates } from '@/types/cemetery';
 import AppLayout from '@/layouts/app-layout';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface CemeteryMaintenancePageProps {
     sections: CemeterySection[];
     plots: CemeteryPlot[];
+    maintenancePins: MaintenancePin[];
     mapboxToken: string;
     centerCoordinates: { lat: number; lng: number };
     initialZoom: number;
@@ -28,6 +29,7 @@ interface CemeteryMaintenancePageProps {
 export default function CemeteryMaintenanceIndex({
     sections,
     plots,
+    maintenancePins,
     mapboxToken,
     centerCoordinates,
     initialZoom,
@@ -53,6 +55,24 @@ export default function CemeteryMaintenanceIndex({
         [maintenancePlots, searchQuery],
     );
 
+    const filteredMaintenancePins = useMemo(
+        () =>
+            maintenancePins.filter((pin) =>
+                pin.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (pin.section && pin.section.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (pin.notes && pin.notes.toLowerCase().includes(searchQuery.toLowerCase())),
+            ),
+        [maintenancePins, searchQuery],
+    );
+
+    const handleResolvePin = (pin: MaintenancePin) => {
+        router.patch(`/maintenance-pins/${pin.id}/resolve`, {}, { preserveScroll: true });
+    };
+
+    const handleDeletePin = (pin: MaintenancePin) => {
+        router.delete(`/maintenance-pins/${pin.id}`, { preserveScroll: true });
+    };
+
     const handleFlagMaintenance = (plot: CemeteryPlot) => {
         setSelectedPlot(null);
         setFlagMaintenancePlot(plot);
@@ -68,60 +88,108 @@ export default function CemeteryMaintenanceIndex({
 
     const MaintenancePlotList = ({ onSelect }: { onSelect?: () => void }) => (
         <div className="space-y-2">
-            {filteredMaintenancePlots.length === 0 ? (
+            {filteredMaintenancePlots.length === 0 && filteredMaintenancePins.length === 0 ? (
                 <div className="py-8 text-center">
                     <CheckCircle2 className="mx-auto h-8 w-8 text-green-500 mb-2" />
                     <p className="text-muted-foreground text-sm">No maintenance flags.</p>
                 </div>
             ) : (
-                filteredMaintenancePlots.map((plot) => (
-                    <Card
-                        key={plot.id}
-                        className="backdrop-blur-sm bg-background/95 hover:bg-accent/20 cursor-pointer transition-colors border-orange-200 dark:border-orange-800"
-                        onClick={() => {
-                            setSelectedPlot(plot);
-                            onSelect?.();
-                        }}
-                    >
-                        <CardContent className="p-4">
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1 min-w-0 space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
-                                        <span className="font-medium">{plot.plot_number}</span>
+                <>
+                    {filteredMaintenancePlots.map((plot) => (
+                        <Card
+                            key={`plot-${plot.id}`}
+                            className="backdrop-blur-sm bg-background/95 hover:bg-accent/20 cursor-pointer transition-colors border-orange-200 dark:border-orange-800"
+                            onClick={() => {
+                                setSelectedPlot(plot);
+                                onSelect?.();
+                            }}
+                        >
+                            <CardContent className="p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
+                                            <span className="font-medium">{plot.plot_number}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="w-2 h-2 rounded-full shrink-0"
+                                                style={{ backgroundColor: plot.section.color }}
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                                {plot.section.name}
+                                            </span>
+                                        </div>
+                                        {plot.notes && (
+                                            <p className="text-xs text-muted-foreground truncate">
+                                                {plot.notes}
+                                            </p>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <div
-                                            className="w-2 h-2 rounded-full shrink-0"
-                                            style={{ backgroundColor: plot.section.color }}
-                                        />
-                                        <span className="text-xs text-muted-foreground">
-                                            {plot.section.name}
-                                        </span>
-                                    </div>
-                                    {plot.notes && (
-                                        <p className="text-xs text-muted-foreground truncate">
-                                            {plot.notes}
-                                        </p>
-                                    )}
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="shrink-0 border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-950 text-xs"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleResolveMaintenance(plot);
+                                            onSelect?.();
+                                        }}
+                                    >
+                                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                                        Resolve
+                                    </Button>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="shrink-0 border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-950 text-xs"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleResolveMaintenance(plot);
-                                        onSelect?.();
-                                    }}
-                                >
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                                    Resolve
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))
+                            </CardContent>
+                        </Card>
+                    ))}
+
+                    {filteredMaintenancePins.map((pin) => (
+                        <Card
+                            key={`pin-${pin.id}`}
+                            className="backdrop-blur-sm bg-background/95 border-orange-200 dark:border-orange-800"
+                        >
+                            <CardContent className="p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
+                                            <span className="font-medium">{pin.label}</span>
+                                        </div>
+                                        {pin.section && (
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="w-2 h-2 rounded-full shrink-0"
+                                                    style={{ backgroundColor: pin.section.color }}
+                                                />
+                                                <span className="text-xs text-muted-foreground">
+                                                    {pin.section.name}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {pin.notes && (
+                                            <p className="text-xs text-muted-foreground truncate">
+                                                {pin.notes}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="shrink-0 border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-950 text-xs"
+                                        onClick={() => {
+                                            handleResolvePin(pin);
+                                            onSelect?.();
+                                        }}
+                                    >
+                                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                                        Resolve
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </>
             )}
         </div>
     );
@@ -140,12 +208,13 @@ export default function CemeteryMaintenanceIndex({
                 <div className="absolute inset-0">
                     <CemeteryMapContainer
                         plots={plots}
+                        maintenancePins={maintenancePins}
                         mapboxToken={mapboxToken}
                         center={centerCoordinates}
                         zoom={initialZoom}
                         selectedPlot={selectedPlot}
                         onPlotClick={setSelectedPlot}
-                        maintenanceMode={true}
+                        placementMode={true}
                         onEmptyMapClick={setMaintenancePinCoords}
                         showAdminActions={true}
                         onFlagMaintenance={handleFlagMaintenance}
@@ -164,7 +233,7 @@ export default function CemeteryMaintenanceIndex({
                                 </CardTitle>
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-muted-foreground">
-                                        {maintenancePlots.length} flagged
+                                        {maintenancePlots.length + maintenancePins.length} flagged
                                     </span>
                                     <Button
                                         size="sm"

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CemeteryPlot;
 use App\Models\CemeterySection;
+use App\Models\MaintenancePin;
 
 class CemeteryMaintenanceController extends Controller
 {
@@ -43,9 +44,28 @@ class CemeteryMaintenanceController extends Controller
                 ];
             });
 
+        $maintenancePins = MaintenancePin::with('section:id,name,code,color')
+            ->unresolved()
+            ->get()
+            ->map(fn ($pin) => [
+                'id' => $pin->id,
+                'label' => $pin->label,
+                'latitude' => (float) $pin->latitude,
+                'longitude' => (float) $pin->longitude,
+                'notes' => $pin->notes,
+                'resolved_at' => $pin->resolved_at,
+                'section' => $pin->section ? [
+                    'id' => $pin->section->id,
+                    'name' => $pin->section->name,
+                    'code' => $pin->section->code,
+                    'color' => $pin->section->color,
+                ] : null,
+            ]);
+
         return inertia()->render('admin/cemetery-maintenance/index', [
             'sections' => $sections,
             'plots' => $plots,
+            'maintenancePins' => $maintenancePins,
             'mapboxToken' => config('services.mapbox.token'),
             'centerCoordinates' => [
                 'lat' => config('cemetery.center.latitude', 14.5995),
