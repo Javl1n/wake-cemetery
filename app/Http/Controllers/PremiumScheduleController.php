@@ -2,64 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PremiumSchedule;
-use Illuminate\Http\Request;
+use App\Models\Subscription;
 
 class PremiumScheduleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): \Inertia\Response
     {
-        //
-    }
+        $subscriptions = Subscription::with([
+            'member.user',
+            'insurance',
+            'schedules' => fn ($q) => $q->orderBy('due_date'),
+        ])
+            ->where('status', 'approved')
+            ->latest()
+            ->get()
+            ->map(function (Subscription $subscription) {
+                $schedules = $subscription->schedules;
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+                return [
+                    'id' => $subscription->id,
+                    'member' => [
+                        'id' => $subscription->member->id,
+                        'user' => [
+                            'name' => $subscription->member->user->name,
+                            'email' => $subscription->member->user->email,
+                        ],
+                    ],
+                    'insurance' => [
+                        'name' => $subscription->insurance->name,
+                        'premium' => $subscription->insurance->premium,
+                        'frequency' => $subscription->insurance->frequency,
+                    ],
+                    'paid_total' => (float) $schedules->where('status', 'paid')->sum('due_amount'),
+                    'outstanding_total' => (float) $schedules->whereIn('status', ['missed', 'late', 'upcoming'])->sum('due_amount'),
+                    'missed_count' => $schedules->whereIn('status', ['missed', 'late'])->count(),
+                    'schedules' => $schedules->map(fn ($s) => [
+                        'id' => $s->id,
+                        'due_date' => $s->due_date->toDateString(),
+                        'due_amount' => (float) $s->due_amount,
+                        'status' => $s->status,
+                    ]),
+                ];
+            });
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(PremiumSchedule $premiumSchedule)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(PremiumSchedule $premiumSchedule)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, PremiumSchedule $premiumSchedule)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(PremiumSchedule $premiumSchedule)
-    {
-        //
+        return inertia()->render('admin/subscriptions/premiums', [
+            'subscriptions' => $subscriptions,
+        ]);
     }
 }

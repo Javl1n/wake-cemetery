@@ -27,6 +27,7 @@ class CemeteryPlotFactory extends Factory
             'status' => 'available',
             'burial_date' => null,
             'notes' => fake()->optional()->sentence(),
+            'description' => fake()->optional()->sentence(),
         ];
     }
 

@@ -13,6 +13,9 @@ class InsuranceClaimReviewController extends Controller
             'subscription.member.user',
             'subscription.insurance',
             'schedule.deceased.beneficiary',
+            'schedule.package',
+            'schedule.services',
+            'schedule.orders',
             'reviewer',
         ])->latest()->get();
 

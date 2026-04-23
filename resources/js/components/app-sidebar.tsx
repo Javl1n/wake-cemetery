@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Map, MapPinHouseIcon, CalendarCheck, Package, Wrench, UserCog, ShieldCheck, TriangleAlert, CalendarDays } from 'lucide-react';
+import { LayoutGrid, Map, MapPinHouseIcon, CalendarCheck, Package, Wrench, UserCog, ShieldCheck, TriangleAlert, CalendarDays, CreditCard } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -18,6 +18,7 @@ import { dashboard } from '@/routes';
 import * as staffRoutes from '@/routes/staff';
 import * as subscriptionReviewRoutes from '@/routes/subscriptions/review/index';
 import * as claimReviewRoutes from '@/routes/claims/review/index';
+import * as premiumRoutes from '@/routes/subscriptions/premiums/index';
 
 const mainNavItems: NavItem[] = [
     {
@@ -83,6 +84,11 @@ const adminNavItems: NavItem[] = [
         title: 'Insurance Claims',
         icon: ShieldCheck,
         href: claimReviewRoutes.index().url,
+    },
+    {
+        title: 'Premium Schedules',
+        icon: CreditCard,
+        href: premiumRoutes.index().url,
     },
 ];
 

@@ -146,6 +146,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('staff', App\Http\Controllers\StaffController::class)->except(['show', 'create', 'edit']);
 });
 
+// Admin / Staff - Premium Payment Schedules
+Route::middleware(['auth', 'verified', 'role:admin,staff'])->get(
+    'subscriptions/premiums',
+    [App\Http\Controllers\PremiumScheduleController::class, 'index']
+)->name('subscriptions.premiums.index');
+
 // Admin / Staff - Insurance Subscription Review
 Route::middleware(['auth', 'verified', 'role:admin,staff'])->name('subscriptions.review.')->prefix('subscriptions/review')->controller(App\Http\Controllers\SubscriptionReviewController::class)->group(function () {
     Route::get('/', 'index')->name('index');

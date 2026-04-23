@@ -22,6 +22,7 @@ class CemeteryMapController extends Controller
             'section:id,name,code,color',
             'deceased:id,beneficiary_id,date_of_death,cause_of_death',
             'deceased.beneficiary:id,name',
+            'deceased.obituary:deceased_id,tribute_token',
             'beneficiary:id,name',
         ])
             ->whereNotNull('latitude')
@@ -35,6 +36,7 @@ class CemeteryMapController extends Controller
                 'status' => $plot->status,
                 'burial_date' => $plot->burial_date?->format('F d, Y'),
                 'notes' => $plot->notes,
+                'description' => $plot->description,
                 'section' => [
                     'id' => $plot->section->id,
                     'name' => $plot->section->name,
@@ -46,6 +48,7 @@ class CemeteryMapController extends Controller
                     'name' => $plot->deceased->beneficiary->name,
                     'date_of_death' => $plot->deceased->date_of_death->format('F d, Y'),
                     'cause_of_death' => $plot->deceased->cause_of_death,
+                    'obituary_token' => $plot->deceased->obituary?->tribute_token,
                 ] : null,
                 'beneficiary' => $plot->beneficiary ? [
                     'id' => $plot->beneficiary->id,
@@ -76,6 +79,10 @@ class CemeteryMapController extends Controller
                 'lat' => config('cemetery.center.latitude', 14.5995),
                 'lng' => config('cemetery.center.longitude', 120.9842),
             ],
+            'entranceCoordinates' => [
+                'lat' => config('cemetery.entrance.latitude', 14.5995),
+                'lng' => config('cemetery.entrance.longitude', 120.9842),
+            ],
             'initialZoom' => config('cemetery.zoom', 16),
         ]);
     }
@@ -104,6 +111,7 @@ class CemeteryMapController extends Controller
                     'status' => $plot->status,
                     'burial_date' => $plot->burial_date?->format('F d, Y'),
                     'notes' => $plot->notes,
+                    'description' => $plot->description,
                     'section' => [
                         'id' => $section->id,
                         'name' => $section->name,
@@ -145,9 +153,8 @@ class CemeteryMapController extends Controller
             'deceased:id,beneficiary_id,date_of_death',
             'deceased.beneficiary:id,name',
         ])
-            ->where('status', 'occupied')
             ->whereHas('deceased.beneficiary', function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%");
+                $q->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($query).'%']);
             })
             ->limit(10)
             ->get()
@@ -160,6 +167,7 @@ class CemeteryMapController extends Controller
                     'deceased_name' => $plot->deceased->beneficiary->name,
                     'section_name' => $plot->section->name,
                     'burial_date' => $plot->burial_date?->format('F d, Y'),
+                    'description' => $plot->description,
                     'deceased' => [
                         'id' => $plot->deceased->id,
                         'name' => $plot->deceased->beneficiary->name,

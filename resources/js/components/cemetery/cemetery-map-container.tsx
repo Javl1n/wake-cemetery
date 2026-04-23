@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Map, {
     FullscreenControl,
+    GeolocateControl,
+    Layer,
     MapLayerMouseEvent,
     Marker,
     NavigationControl,
     Popup,
+    Source,
 } from 'react-map-gl/mapbox';
+import type { GeolocateResultEvent } from 'react-map-gl/mapbox';
 import { CemeteryEvent, CemeteryPlot, MapCoordinates } from '@/types/cemetery';
 import { AlertTriangle, CalendarDays, MapPin } from 'lucide-react';
 import PlotDetailPopup from './plot-detail-popup';
@@ -26,6 +30,9 @@ interface CemeteryMapContainerProps {
     showAdminActions?: boolean;
     onFlagMaintenance?: (plot: CemeteryPlot) => void;
     onResolveMaintenance?: (plot: CemeteryPlot) => void;
+    wayfinderPlot?: CemeteryPlot | null;
+    wayfinderEntrance?: MapCoordinates | null;
+    onUserLocationUpdate?: (location: MapCoordinates) => void;
 }
 
 export default function CemeteryMapContainer({
@@ -43,8 +50,12 @@ export default function CemeteryMapContainer({
     showAdminActions = false,
     onFlagMaintenance,
     onResolveMaintenance,
+    wayfinderPlot = null,
+    wayfinderEntrance = null,
+    onUserLocationUpdate,
 }: CemeteryMapContainerProps) {
     const mapRef = useRef<any>(null);
+    const [localUserLocation, setLocalUserLocation] = useState<MapCoordinates | null>(null);
     const [viewState, setViewState] = useState({
         latitude: center.lat,
         longitude: center.lng,
@@ -70,6 +81,41 @@ export default function CemeteryMapContainer({
             });
         }
     }, [selectedEvent]);
+
+    useEffect(() => {
+        if (wayfinderPlot && mapRef.current) {
+            if (localUserLocation) {
+                mapRef.current.fitBounds(
+                    [
+                        [
+                            Math.min(localUserLocation.lng, wayfinderPlot.longitude) - 0.0003,
+                            Math.min(localUserLocation.lat, wayfinderPlot.latitude) - 0.0003,
+                        ],
+                        [
+                            Math.max(localUserLocation.lng, wayfinderPlot.longitude) + 0.0003,
+                            Math.max(localUserLocation.lat, wayfinderPlot.latitude) + 0.0003,
+                        ],
+                    ],
+                    { padding: 80, duration: 1500 },
+                );
+            } else {
+                mapRef.current.flyTo({
+                    center: [wayfinderPlot.longitude, wayfinderPlot.latitude],
+                    zoom: 18,
+                    duration: 1500,
+                });
+            }
+        }
+    }, [wayfinderPlot]);
+
+    const handleGeolocate = useCallback(
+        (e: GeolocateResultEvent) => {
+            const loc = { lat: e.coords.latitude, lng: e.coords.longitude };
+            setLocalUserLocation(loc);
+            onUserLocationUpdate?.(loc);
+        },
+        [onUserLocationUpdate],
+    );
 
     const handleMapClick = useCallback(
         (e: MapLayerMouseEvent) => {
@@ -100,6 +146,12 @@ export default function CemeteryMapContainer({
             >
                 <NavigationControl position="top-right" />
                 <FullscreenControl position="top-right" />
+                <GeolocateControl
+                    position="bottom-right"
+                    trackUserLocation
+                    showUserHeading
+                    onGeolocate={handleGeolocate}
+                />
 
                 {plots.map((plot) => (
                     <Marker
@@ -159,6 +211,41 @@ export default function CemeteryMapContainer({
                         </div>
                     </Marker>
                 ))}
+
+                {wayfinderPlot && (() => {
+                    const origin = localUserLocation ?? wayfinderEntrance ?? center;
+                    const routeGeoJSON: GeoJSON.FeatureCollection = {
+                        type: 'FeatureCollection',
+                        features: [
+                            {
+                                type: 'Feature',
+                                geometry: {
+                                    type: 'LineString',
+                                    coordinates: [
+                                        [origin.lng, origin.lat],
+                                        [wayfinderPlot.longitude, wayfinderPlot.latitude],
+                                    ],
+                                },
+                                properties: {},
+                            },
+                        ],
+                    };
+                    return (
+                        <Source id="wayfinder-route-source" type="geojson" data={routeGeoJSON}>
+                            <Layer
+                                id="wayfinder-route"
+                                type="line"
+                                layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+                                paint={{
+                                    'line-color': '#3b82f6',
+                                    'line-width': 4,
+                                    'line-dasharray': [2, 2],
+                                    'line-opacity': 0.85,
+                                }}
+                            />
+                        </Source>
+                    );
+                })()}
 
                 {selectedPlot && (
                     <Popup

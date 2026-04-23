@@ -21,7 +21,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Receipt } from 'lucide-react';
 import { format } from 'date-fns';
 import * as claimReviewRoutes from '@/routes/claims/review/index';
 
@@ -48,12 +48,37 @@ interface Beneficiary {
     relationship: string;
 }
 
+interface WakePackage {
+    id: number;
+    name: string;
+    base_price: number;
+}
+
+interface WakeService {
+    id: number;
+    name: string;
+    pivot: { fee: number };
+}
+
+interface InventoryOrder {
+    id: number;
+    amount: number;
+    notes: string | null;
+}
+
 interface Schedule {
     id: number;
+    total_amount: number;
+    date_start: string;
+    date_end: string;
+    status: string;
     deceased: {
         id: number;
         beneficiary: Beneficiary | null;
     };
+    package: WakePackage | null;
+    services: WakeService[];
+    orders: InventoryOrder[];
 }
 
 interface Reviewer {
@@ -74,6 +99,10 @@ interface Claim {
 
 interface Props {
     claims: Claim[];
+}
+
+function fmt(amount: number | string): string {
+    return '₱' + parseFloat(amount.toString()).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 const statusColors: Record<string, string> = {
@@ -221,7 +250,7 @@ export default function ClaimsIndex({ claims }: Props) {
                                         </TableCell>
                                         <TableCell>
                                             {claim.approved_amount != null
-                                                ? `₱${parseFloat(claim.approved_amount.toString()).toLocaleString()}`
+                                                ? fmt(claim.approved_amount)
                                                 : <span className="text-muted-foreground text-xs">—</span>
                                             }
                                         </TableCell>
@@ -248,7 +277,7 @@ export default function ClaimsIndex({ claims }: Props) {
                                                             size="sm"
                                                             variant="outline"
                                                             className="text-green-700 border-green-300 hover:bg-green-50"
-                                                            onClick={() => { setApproveOpen(claim); setApprovedAmount(''); }}
+                                                            onClick={() => { setApproveOpen(claim); setApprovedAmount(parseFloat(claim.schedule.total_amount.toString()).toFixed(2)); }}
                                                         >
                                                             Approve
                                                         </Button>
@@ -275,7 +304,7 @@ export default function ClaimsIndex({ claims }: Props) {
             {/* Detail Dialog */}
             {detailClaim && (
                 <Dialog open={!!detailClaim} onOpenChange={() => setDetailClaim(null)}>
-                    <DialogContent className="sm:max-w-[520px]">
+                    <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Claim Details</DialogTitle>
                             <DialogDescription>
@@ -314,7 +343,7 @@ export default function ClaimsIndex({ claims }: Props) {
                                 {detailClaim.approved_amount != null && (
                                     <div>
                                         <p className="text-xs text-muted-foreground">Approved Amount</p>
-                                        <p className="font-medium">₱{parseFloat(detailClaim.approved_amount.toString()).toLocaleString()}</p>
+                                        <p className="font-medium">{fmt(detailClaim.approved_amount)}</p>
                                     </div>
                                 )}
                                 {detailClaim.reviewer && (
@@ -331,6 +360,38 @@ export default function ClaimsIndex({ claims }: Props) {
                             </div>
                         </div>
 
+                        {/* Wake Balance */}
+                        <div className="flex flex-col gap-2 text-sm">
+                            <div className="flex items-center gap-1.5 font-medium">
+                                <Receipt className="h-4 w-4 text-muted-foreground" />
+                                Wake Balance
+                            </div>
+                            <div className="rounded-lg border divide-y">
+                                {detailClaim.schedule.package && (
+                                    <div className="flex justify-between px-4 py-2.5">
+                                        <span className="text-muted-foreground">{detailClaim.schedule.package.name}</span>
+                                        <span>{fmt(detailClaim.schedule.package.base_price)}</span>
+                                    </div>
+                                )}
+                                {detailClaim.schedule.services.map((svc) => (
+                                    <div key={svc.id} className="flex justify-between px-4 py-2.5">
+                                        <span className="text-muted-foreground">{svc.name}</span>
+                                        <span>{fmt(svc.pivot.fee)}</span>
+                                    </div>
+                                ))}
+                                {detailClaim.schedule.orders.map((order) => (
+                                    <div key={order.id} className="flex justify-between px-4 py-2.5">
+                                        <span className="text-muted-foreground">{order.notes ?? 'Inventory Order'}</span>
+                                        <span>{fmt(order.amount)}</span>
+                                    </div>
+                                ))}
+                                <div className="flex justify-between px-4 py-2.5 font-semibold bg-muted/40">
+                                    <span>Total</span>
+                                    <span>{fmt(detailClaim.schedule.total_amount)}</span>
+                                </div>
+                            </div>
+                        </div>
+
                         {detailClaim.status === 'filed' && (
                             <DialogFooter className="gap-2">
                                 <Button
@@ -342,7 +403,7 @@ export default function ClaimsIndex({ claims }: Props) {
                                 </Button>
                                 <Button
                                     className="bg-green-600 hover:bg-green-700 text-white"
-                                    onClick={() => { setApproveOpen(detailClaim); setDetailClaim(null); setApprovedAmount(''); }}
+                                    onClick={() => { setApproveOpen(detailClaim); setDetailClaim(null); setApprovedAmount(parseFloat(detailClaim.schedule.total_amount.toString()).toFixed(2)); }}
                                 >
                                     Approve
                                 </Button>

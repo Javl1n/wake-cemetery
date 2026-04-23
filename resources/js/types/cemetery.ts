@@ -15,6 +15,7 @@ export interface Deceased {
     name: string;
     date_of_death: string;
     cause_of_death: string;
+    obituary_token?: string | null;
 }
 
 export interface CemeteryPlot {
@@ -25,6 +26,7 @@ export interface CemeteryPlot {
     status: 'available' | 'occupied' | 'reserved' | 'maintenance';
     burial_date: string | null;
     notes: string | null;
+    description: string | null;
     section: {
         id: number;
         name: string;
@@ -60,6 +62,7 @@ export interface CemeteryMapPageProps {
     events: CemeteryEvent[];
     mapboxToken: string;
     centerCoordinates: MapCoordinates;
+    entranceCoordinates: MapCoordinates;
     initialZoom: number;
 }
 

@@ -61,6 +61,13 @@ export default function PlotDetailPopup({
                     </span>
                 </div>
 
+                {plot.description && (
+                    <div>
+                        <span className="text-muted-foreground">Landmark:</span>{' '}
+                        <span>{plot.description}</span>
+                    </div>
+                )}
+
                 {showAdminActions && (
                     <>
                         <Separator />

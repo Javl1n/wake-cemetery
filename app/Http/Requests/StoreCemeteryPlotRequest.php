@@ -31,7 +31,7 @@ class StoreCemeteryPlotRequest extends FormRequest
             'longitude' => 'required|numeric|between:-180,180',
             'status' => ['required', Rule::in(['available', 'occupied', 'reserved', 'maintenance'])],
             'burial_date' => 'nullable|date',
-            'notes' => 'nullable|string',
+            'description' => 'nullable|string',
         ];
     }
 }

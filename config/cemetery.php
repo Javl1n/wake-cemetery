@@ -18,6 +18,11 @@ return [
         'longitude' => env('CEMETERY_CENTER_LNG', 120.9842),
     ],
 
+    'entrance' => [
+        'latitude' => env('CEMETERY_ENTRANCE_LAT', env('CEMETERY_CENTER_LAT', 14.5995)),
+        'longitude' => env('CEMETERY_ENTRANCE_LNG', env('CEMETERY_CENTER_LNG', 120.9842)),
+    ],
+
     'zoom' => env('CEMETERY_ZOOM', 16),
 
 ];

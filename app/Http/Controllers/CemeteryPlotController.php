@@ -37,6 +37,7 @@ class CemeteryPlotController extends Controller
                     'status' => $plot->status,
                     'burial_date' => $plot->burial_date?->format('F d, Y'),
                     'notes' => $plot->notes,
+                    'description' => $plot->description,
                     'section' => [
                         'id' => $plot->section->id,
                         'name' => $plot->section->name,

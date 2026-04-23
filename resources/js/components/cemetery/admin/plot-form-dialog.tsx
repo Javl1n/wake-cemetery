@@ -57,7 +57,7 @@ export default function PlotFormDialog({
         longitude: plot?.longitude || centerCoordinates.lng,
         status: plot?.status || 'available',
         burial_date: plot?.burial_date || '',
-        notes: plot?.notes || '',
+        description: plot?.description || '',
     });
 
     // Update viewport when plot changes
@@ -267,16 +267,16 @@ export default function PlotFormDialog({
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="notes">Notes (Optional)</Label>
+                                <Label htmlFor="description">Landmark Description (Optional)</Label>
                                 <Textarea
-                                    id="notes"
-                                    value={data.notes}
-                                    onChange={(e) => setData('notes', e.target.value)}
-                                    placeholder="Additional notes..."
-                                    rows={3}
+                                    id="description"
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    placeholder="e.g., Near the old oak tree, beside the main pathway..."
+                                    rows={2}
                                 />
-                                {errors.notes && (
-                                    <p className="text-sm text-destructive">{errors.notes}</p>
+                                {errors.description && (
+                                    <p className="text-sm text-destructive">{errors.description}</p>
                                 )}
                             </div>
                         </div>

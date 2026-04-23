@@ -20,6 +20,7 @@ class CemeteryPlot extends Model
         'status',
         'burial_date',
         'notes',
+        'description',
     ];
 
     protected function casts(): array
