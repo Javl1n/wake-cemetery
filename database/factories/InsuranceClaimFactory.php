@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Subscription;
+use App\Models\WakeSchedule;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,10 @@ class InsuranceClaimFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'schedule_id' => WakeSchedule::factory(),
+            'subscription_id' => Subscription::factory(),
+            'status' => 'filed',
+            'filed_at' => now(),
         ];
     }
 }

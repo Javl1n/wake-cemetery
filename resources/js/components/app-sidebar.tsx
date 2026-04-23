@@ -17,6 +17,7 @@ import AppLogo from './app-logo';
 import { dashboard } from '@/routes';
 import * as staffRoutes from '@/routes/staff';
 import * as subscriptionReviewRoutes from '@/routes/subscriptions/review/index';
+import * as claimReviewRoutes from '@/routes/claims/review/index';
 
 const mainNavItems: NavItem[] = [
     {
@@ -77,6 +78,11 @@ const adminNavItems: NavItem[] = [
         title: 'Insurance Subscriptions',
         icon: ShieldCheck,
         href: subscriptionReviewRoutes.index().url,
+    },
+    {
+        title: 'Insurance Claims',
+        icon: ShieldCheck,
+        href: claimReviewRoutes.index().url,
     },
 ];
 

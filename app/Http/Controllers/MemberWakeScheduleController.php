@@ -21,7 +21,7 @@ class MemberWakeScheduleController extends Controller
         abort_if(! $member, 403, 'Member profile required.');
 
         $schedules = WakeSchedule::with([
-            'deceased.beneficiary',
+            'deceased.beneficiary.subscription',
             'deceased.obituary',
             'deceased.cemeteryPlot.section',
             'room',
@@ -43,10 +43,16 @@ class MemberWakeScheduleController extends Controller
             'plots' => fn ($q) => $q->where('status', 'available')->orderBy('plot_number'),
         ])->get()->filter(fn ($s) => $s->plots->isNotEmpty())->values();
 
+        $subscription = $member->load('subscription.insurance')->subscription;
+
         return inertia()->render('members/wake-schedules/index', [
             'schedules' => $schedules,
             'inventoryItems' => $inventoryItems,
             'availableSections' => $availableSections,
+            'memberSubscription' => $subscription ? [
+                'id' => $subscription->id,
+                'status' => $subscription->status,
+            ] : null,
         ]);
     }
 

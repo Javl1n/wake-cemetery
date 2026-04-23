@@ -22,7 +22,8 @@ import MemberLayout from '@/layouts/member-layout';
 import OrderItemsDialog from '@/components/wake/member/order-items-dialog';
 import ReservePlotDialog from '@/components/wake/member/reserve-plot-dialog';
 import { Calendar, Package, ShoppingCart, ShieldCheck, Users, BookHeart, QrCode, ExternalLink, Copy, Check, MapPin } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import * as claimRoutes from '@/routes/members/wake-schedules/claim/index';
 import { QRCodeSVG } from 'qrcode.react';
 import type { WakeSchedule, InventoryItem } from '@/types/wake';
 
@@ -39,10 +40,16 @@ interface SectionWithPlots {
     plots: AvailablePlot[];
 }
 
+interface MemberSubscription {
+    id: number;
+    status: string;
+}
+
 interface Props {
     schedules: WakeSchedule[];
     inventoryItems: InventoryItem[];
     availableSections: SectionWithPlots[];
+    memberSubscription: MemberSubscription | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -62,9 +69,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const claimStatusColors: Record<string, string> = {
-    pending: 'bg-yellow-500/10 text-yellow-700',
+    filed: 'bg-blue-500/10 text-blue-700',
     approved: 'bg-green-500/10 text-green-700',
     rejected: 'bg-red-500/10 text-red-700',
+    paid: 'bg-emerald-500/10 text-emerald-700',
 };
 
 function getDeceasedName(schedule: WakeSchedule): string {
@@ -82,12 +90,13 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     );
 }
 
-export default function MemberWakeSchedulesIndex({ schedules, inventoryItems, availableSections }: Props) {
+export default function MemberWakeSchedulesIndex({ schedules, inventoryItems, availableSections, memberSubscription }: Props) {
     const [selected, setSelected] = useState<WakeSchedule | null>(null);
     const [orderOpen, setOrderOpen] = useState(false);
     const [reservePlotOpen, setReservePlotOpen] = useState(false);
     const [qrOpen, setQrOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [filingClaim, setFilingClaim] = useState(false);
 
     const tributeUrl = selected?.deceased.obituary
         ? `${window.location.origin}/tribute/${selected.deceased.obituary.tribute_token}`
@@ -109,6 +118,25 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems, av
         : false;
 
     const hasReservedPlot = selected ? !!selected.deceased.cemetery_plot : false;
+
+    const canFileClaim = selected
+        ? memberSubscription?.status === 'approved' &&
+          !!selected.deceased.beneficiary &&
+          ['confirmed', 'in_progress', 'completed'].includes(selected.status) &&
+          !selected.claims
+        : false;
+
+    const handleFileClaim = () => {
+        if (!selected) return;
+        setFilingClaim(true);
+        router.post(
+            claimRoutes.store(selected).url,
+            {},
+            {
+                onFinish: () => setFilingClaim(false),
+            },
+        );
+    };
 
     return (
         <MemberLayout title="Wake Schedules">
@@ -349,10 +377,16 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems, av
                                                 <div className="space-y-1.5">
                                                     <div className="flex justify-between text-sm">
                                                         <span className="text-muted-foreground">Status</span>
-                                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${claimStatusColors[selected.claims.status] ?? ''}`}>
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${claimStatusColors[selected.claims.status] ?? ''}`}>
                                                             {selected.claims.status}
                                                         </span>
                                                     </div>
+                                                    {selected.claims.filed_at && (
+                                                        <InfoRow
+                                                            label="Filed"
+                                                            value={format(new Date(selected.claims.filed_at), 'MMM d, yyyy')}
+                                                        />
+                                                    )}
                                                     {selected.claims.approved_amount && (
                                                         <InfoRow
                                                             label="Approved Amount"
@@ -472,6 +506,23 @@ export default function MemberWakeSchedulesIndex({ schedules, inventoryItems, av
                                 {!canOrder && selected.status !== 'cancelled' && selected.status !== 'completed' && (
                                     <p className="text-sm text-center text-muted-foreground">
                                         Item ordering is available once the schedule is confirmed.
+                                    </p>
+                                )}
+
+                                {canFileClaim && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full border-blue-500/40 bg-blue-500/5 text-blue-700 hover:bg-blue-500/10 hover:text-blue-700"
+                                        onClick={handleFileClaim}
+                                        disabled={filingClaim}
+                                    >
+                                        <ShieldCheck className="h-4 w-4 mr-2" />
+                                        {filingClaim ? 'Filing Claim...' : 'File Insurance Claim'}
+                                    </Button>
+                                )}
+                                {selected.claims?.status === 'filed' && (
+                                    <p className="text-xs text-muted-foreground text-center">
+                                        Your insurance claim is under review.
                                     </p>
                                 )}
                             </div>

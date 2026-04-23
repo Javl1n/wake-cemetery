@@ -111,6 +111,7 @@ Route::middleware(['auth', 'verified', 'role:member'])->prefix('/member')->name(
     Route::get('/wake-schedules', [App\Http\Controllers\MemberWakeScheduleController::class, 'index'])->name('wake-schedules.index');
     Route::post('/wake-schedules/{wakeSchedule}/orders', [App\Http\Controllers\MemberWakeScheduleController::class, 'storeOrder'])->name('wake-schedules.orders.store');
     Route::post('/wake-schedules/{wakeSchedule}/reserve-plot', [App\Http\Controllers\MemberWakeScheduleController::class, 'reservePlot'])->name('wake-schedules.reserve-plot');
+    Route::post('/wake-schedules/{wakeSchedule}/claim', [App\Http\Controllers\InsuranceClaimController::class, 'store'])->name('wake-schedules.claim.store');
 });
 
 // Member obituary management
@@ -150,6 +151,13 @@ Route::middleware(['auth', 'verified', 'role:admin,staff'])->name('subscriptions
     Route::get('/', 'index')->name('index');
     Route::post('{subscription}/approve', 'approve')->name('approve');
     Route::post('{subscription}/reject', 'reject')->name('reject');
+});
+
+// Admin / Staff - Insurance Claim Review
+Route::middleware(['auth', 'verified', 'role:admin,staff'])->name('claims.review.')->prefix('claims/review')->controller(App\Http\Controllers\InsuranceClaimReviewController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('{claim}/approve', 'approve')->name('approve');
+    Route::post('{claim}/reject', 'reject')->name('reject');
 });
 
 // Admin - Cemetery Management

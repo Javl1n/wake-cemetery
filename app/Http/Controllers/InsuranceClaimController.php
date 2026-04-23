@@ -2,65 +2,55 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreInsuranceClaimRequest;
-use App\Http\Requests\UpdateInsuranceClaimRequest;
 use App\Models\InsuranceClaim;
+use App\Models\WakeSchedule;
+use Illuminate\Http\Request;
 
 class InsuranceClaimController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * File an insurance claim for a wake schedule.
      */
-    public function index()
+    public function store(Request $request, WakeSchedule $wakeSchedule)
     {
-        //
-    }
+        $member = $request->user()->member;
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        abort_if(! $member, 403);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreInsuranceClaimRequest $request)
-    {
-        //
-    }
+        $subscription = $member->subscription;
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(InsuranceClaim $insuranceClaim)
-    {
-        //
-    }
+        abort_if(
+            ! $subscription || $subscription->status !== 'approved',
+            403,
+            'You must have an approved insurance subscription to file a claim.'
+        );
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(InsuranceClaim $insuranceClaim)
-    {
-        //
-    }
+        abort_if(
+            ! $wakeSchedule->deceased->beneficiary_id ||
+            $wakeSchedule->deceased->beneficiary->subscription_id !== $subscription->id,
+            403,
+            'This beneficiary does not belong to your subscription.'
+        );
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateInsuranceClaimRequest $request, InsuranceClaim $insuranceClaim)
-    {
-        //
-    }
+        abort_if(
+            ! in_array($wakeSchedule->status, ['confirmed', 'in_progress', 'completed']),
+            422,
+            'Claims can only be filed for confirmed or active schedules.'
+        );
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(InsuranceClaim $insuranceClaim)
-    {
-        //
+        abort_if(
+            $wakeSchedule->claims()->exists(),
+            422,
+            'A claim has already been filed for this schedule.'
+        );
+
+        InsuranceClaim::create([
+            'schedule_id' => $wakeSchedule->id,
+            'subscription_id' => $subscription->id,
+            'status' => 'filed',
+            'filed_at' => now(),
+        ]);
+
+        return redirect()->back();
     }
 }

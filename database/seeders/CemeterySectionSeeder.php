@@ -24,8 +24,8 @@ class CemeterySectionSeeder extends Seeder
                 'color' => '#10b981',
                 'total_plots' => 60,
                 'available_plots' => 60,
-                'geometry_type' => 'polygon',
-                'geometry' => $this->makePolygon(125.06838, 125.06911, 6.21133, 6.21203),
+                // 'geometry_type' => 'polygon',
+                // 'geometry' => $this->makePolygon(125.06838, 125.06911, 6.21133, 6.21203),
             ],
             [
                 'name' => 'Veterans Section',
@@ -34,8 +34,8 @@ class CemeterySectionSeeder extends Seeder
                 'color' => '#3b82f6',
                 'total_plots' => 50,
                 'available_plots' => 50,
-                'geometry_type' => 'polygon',
-                'geometry' => $this->makePolygon(125.06921, 125.06994, 6.21133, 6.21203),
+                // 'geometry_type' => 'polygon',
+                // 'geometry' => $this->makePolygon(125.06921, 125.06994, 6.21133, 6.21203),
             ],
             [
                 'name' => 'Children\'s Garden',
@@ -44,8 +44,8 @@ class CemeterySectionSeeder extends Seeder
                 'color' => '#ec4899',
                 'total_plots' => 30,
                 'available_plots' => 30,
-                'geometry_type' => 'polygon',
-                'geometry' => $this->makePolygon(125.07004, 125.07077, 6.21133, 6.21203),
+                // 'geometry_type' => 'polygon',
+                // 'geometry' => $this->makePolygon(125.07004, 125.07077, 6.21133, 6.21203),
             ],
             [
                 'name' => 'Family Estates',
@@ -54,8 +54,8 @@ class CemeterySectionSeeder extends Seeder
                 'color' => '#f59e0b',
                 'total_plots' => 40,
                 'available_plots' => 40,
-                'geometry_type' => 'polygon',
-                'geometry' => $this->makePolygon(125.07087, 125.07160, 6.21133, 6.21203),
+                // 'geometry_type' => 'polygon',
+                // 'geometry' => $this->makePolygon(125.07087, 125.07160, 6.21133, 6.21203),
             ],
             [
                 'name' => 'Rose Garden',
@@ -64,8 +64,8 @@ class CemeterySectionSeeder extends Seeder
                 'color' => '#ef4444',
                 'total_plots' => 45,
                 'available_plots' => 45,
-                'geometry_type' => 'polygon',
-                'geometry' => $this->makePolygon(125.06838, 125.06911, 6.21053, 6.21123),
+                // 'geometry_type' => 'polygon',
+                // 'geometry' => $this->makePolygon(125.06838, 125.06911, 6.21053, 6.21123),
             ],
             [
                 'name' => 'Sacred Grounds',
@@ -74,8 +74,8 @@ class CemeterySectionSeeder extends Seeder
                 'color' => '#8b5cf6',
                 'total_plots' => 55,
                 'available_plots' => 55,
-                'geometry_type' => 'polygon',
-                'geometry' => $this->makePolygon(125.06921, 125.06994, 6.21053, 6.21123),
+                // 'geometry_type' => 'polygon',
+                // 'geometry' => $this->makePolygon(125.06921, 125.06994, 6.21053, 6.21123),
             ],
             [
                 'name' => 'Memorial Gardens',
@@ -84,8 +84,8 @@ class CemeterySectionSeeder extends Seeder
                 'color' => '#06b6d4',
                 'total_plots' => 50,
                 'available_plots' => 50,
-                'geometry_type' => 'polygon',
-                'geometry' => $this->makePolygon(125.07004, 125.07077, 6.21053, 6.21123),
+                // 'geometry_type' => 'polygon',
+                // 'geometry' => $this->makePolygon(125.07004, 125.07077, 6.21053, 6.21123),
             ],
             [
                 'name' => 'Eternal Rest',
@@ -94,8 +94,8 @@ class CemeterySectionSeeder extends Seeder
                 'color' => '#84cc16',
                 'total_plots' => 35,
                 'available_plots' => 35,
-                'geometry_type' => 'polygon',
-                'geometry' => $this->makePolygon(125.07087, 125.07160, 6.21053, 6.21123),
+                // 'geometry_type' => 'polygon',
+                // 'geometry' => $this->makePolygon(125.07087, 125.07160, 6.21053, 6.21123),
             ],
         ];
 

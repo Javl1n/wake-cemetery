@@ -1,0 +1,1183 @@
+ ▐▛███▜▌   Claude Code v2.1.86
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/Development/wake-cemetery
+
+  ✻ Voice mode is now available · /voice to enable
+
+❯ /clear                                                                        
+  ⎿  (no content)
+
+❯ let's finalize the insurance claiming feature                                 
+
+● Explore(Explore insurance claiming feature)
+  ⎿  Done (53 tool uses · 66.2k tokens · 1m 39s)
+  (ctrl+o to expand)
+
+● Let me look at the key existing implementations to understand the patterns
+  before we plan.
+
+  Read 8 files (ctrl+o to expand)
+
+● Now let me look at the admin subscriptions page and the types file for
+  WakeSchedule to understand the full picture.
+
+  Read 2 files (ctrl+o to expand)
+
+● Let me check the migration and the Subscription model for eligibility logic.
+
+  Read 2 files (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● laravel-boost - database-schema (MCP)(filter: "insurance_claims",
+                                       include_column_details: true)
+  ⎿  {
+       "engine": "sqlite",
+       "tables": {
+     … +39 lines (ctrl+o to expand)
+
+  Read 2 files (ctrl+o to expand)
+
+● Skill(laravel-best-practices)
+  ⎿  Successfully loaded skill
+
+  Read 3 files (ctrl+o to expand)
+
+● Let me check how existing dialogs handle POST submissions on the member side.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Good - the pattern is clear. Now I have everything I need. Let me implement
+  the full insurance claiming feature.
+● Now let's implement. Starting with the migration:
+
+● Bash(php artisan make:migration
+      make_review_fields_nullable_in_insurance_claims_table --no-interaction)
+  ⎿     INFO  Migration [database/migrations/2026_04_23_112244_make_review_
+     fields_nullable_in_insurance_claims_table.php] created successfully.
+
+● Write(database/migrations/2026_04_23_112244_make_review_fields_nullable_in_ins
+       urance_claims_table.php)
+  ⎿  Error writing file
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(database/migrations/2026_04_23_112244_make_review_fields_nullable_in_in
+        surance_claims_table.php)
+  ⎿  Added 6 lines, removed 5 lines
+      12      public function up(): void
+      13      {
+      14          Schema::table('insurance_claims', function (Blueprint $
+          table) {
+      15 -            //                                                 
+      15 +            $table->foreignId('reviewer_id')->nullable()->chang
+         +e();                                                           
+      16 +            $table->float('approved_amount')->nullable()->chang
+         +e();                                                           
+      17 +            $table->timestamp('reviewed_at')->nullable()->chang
+         +e();                                                           
+      18          });
+      19      }
+      20  
+      19 -    /**                                                        
+      20 -     * Reverse the migrations.                                 
+      21 -     */                                                        
+      21      public function down(): void
+      22      {
+      23          Schema::table('insurance_claims', function (Blueprint $
+          table) {
+      25 -            //                                                 
+      24 +            $table->foreignId('reviewer_id')->nullable(false)->
+         +change();                                                      
+      25 +            $table->float('approved_amount')->nullable(false)->
+         +change();                                                      
+      26 +            $table->timestamp('reviewed_at')->nullable(false)->
+         +change();                                                      
+      27          });
+      28      }
+      29  };
+
+● Bash(php artisan migrate --no-interaction)
+  ⎿     INFO  Running migrations.
+
+       2026_04_23_112244_make_review_fields_nullable_in_insurance_claims_ta
+     ble  26.59ms DONE
+
+● Now the model, controller, review controller, and routes:
+
+● Update(app/Models/InsuranceClaim.php)
+  ⎿  Added 19 lines
+      10      /** @use HasFactory<\Database\Factories\InsuranceClaimFacto
+          ry> */
+      11      use HasFactory;
+      12  
+      13 +    protected $fillable = [                                    
+      14 +        'schedule_id',                                         
+      15 +        'subscription_id',                                     
+      16 +        'reviewer_id',                                         
+      17 +        'approved_amount',                                     
+      18 +        'status',                                              
+      19 +        'filed_at',                                            
+      20 +        'reviewed_at',                                         
+      21 +    ];                                                         
+      22 +                                                               
+      23 +    protected function casts(): array                          
+      24 +    {                                                          
+      25 +        return [                                               
+      26 +            'filed_at' => 'datetime',                          
+      27 +            'reviewed_at' => 'datetime',                       
+      28 +            'approved_amount' => 'decimal:2',                  
+      29 +        ];                                                     
+      30 +    }                                                          
+      31 +                                                               
+      32      public function subscription()
+      33      {
+      34          return $this->belongsTo(Subscription::class, 'subscript
+          ion_id');
+
+● Now update InsuranceClaimController.store() with the filing logic:
+
+● Update(app/Http/Controllers/InsuranceClaimController.php)
+  ⎿  Added 42 lines, removed 47 lines
+       2  
+       3  namespace App\Http\Controllers;
+       4  
+       5 -use App\Http\Requests\StoreInsuranceClaimRequest;              
+       6 -use App\Http\Requests\UpdateInsuranceClaimRequest;             
+       5  use App\Models\InsuranceClaim;
+       6 +use App\Models\WakeSchedule;                                   
+       7 +use Illuminate\Http\Request;                                   
+       8  
+       9  class InsuranceClaimController extends Controller
+      10  {
+      11      /**
+      12 -     * Display a listing of the resource.                      
+      12 +     * File an insurance claim for a wake schedule.            
+      13       */
+      14 -    public function index()                                    
+      14 +    public function store(Request $request, WakeSchedule $wakeS
+         +chedule)                                                       
+      15      {
+      16 -        //                                                     
+      17 -    }                                                          
+      16 +        $member = $request->user()->member;                    
+      17  
+      19 -    /**                                                        
+      20 -     * Show the form for creating a new resource.              
+      21 -     */                                                        
+      22 -    public function create()                                   
+      23 -    {                                                          
+      24 -        //                                                     
+      25 -    }                                                          
+      18 +        abort_if(! $member, 403);                              
+      19  
+      27 -    /**                                                        
+      28 -     * Store a newly created resource in storage.              
+      29 -     */                                                        
+      30 -    public function store(StoreInsuranceClaimRequest $request) 
+      31 -    {                                                          
+      32 -        //                                                     
+      33 -    }                                                          
+      20 +        $subscription = $member->subscription;                 
+      21  
+      35 -    /**                                                        
+      36 -     * Display the specified resource.                         
+      37 -     */                                                        
+      38 -    public function show(InsuranceClaim $insuranceClaim)       
+      39 -    {                                                          
+      40 -        //                                                     
+      41 -    }                                                          
+      22 +        abort_if(                                              
+      23 +            ! $subscription || $subscription->status !== 'appro
+         +ved',                                                          
+      24 +            403,                                               
+      25 +            'You must have an approved insurance subscription t
+         +o file a claim.'                                               
+      26 +        );                                                     
+      27  
+      43 -    /**                                                        
+      44 -     * Show the form for editing the specified resource.       
+      45 -     */                                                        
+      46 -    public function edit(InsuranceClaim $insuranceClaim)       
+      47 -    {                                                          
+      48 -        //                                                     
+      49 -    }                                                          
+      28 +        abort_if(                                              
+      29 +            ! $wakeSchedule->deceased->beneficiary_id,         
+      30 +            422,                                               
+      31 +            'Claims can only be filed for a covered beneficiary
+         +, not for the member themselves.'                              
+      32 +        );                                                     
+      33  
+      51 -    /**                                                        
+      52 -     * Update the specified resource in storage.               
+      53 -     */                                                        
+      54 -    public function update(UpdateInsuranceClaimRequest $request
+         -, InsuranceClaim $insuranceClaim)                              
+      55 -    {                                                          
+      56 -        //                                                     
+      57 -    }                                                          
+      34 +        abort_if(                                              
+      35 +            $wakeSchedule->deceased->beneficiary->subscription_
+         +id !== $subscription->id,                                      
+      36 +            403,                                               
+      37 +            'This beneficiary does not belong to your subscript
+         +ion.'                                                          
+      38 +        );                                                     
+      39  
+      59 -    /**                                                        
+      60 -     * Remove the specified resource from storage.             
+      61 -     */                                                        
+      62 -    public function destroy(InsuranceClaim $insuranceClaim)    
+      63 -    {                                                          
+      64 -        //                                                     
+      40 +        abort_if(                                              
+      41 +            ! in_array($wakeSchedule->status, ['confirmed', 'in
+         +_progress', 'completed']),                                     
+      42 +            422,                                               
+      43 +            'Claims can only be filed for confirmed or active s
+         +chedules.'                                                     
+      44 +        );                                                     
+      45 +                                                               
+      46 +        abort_if(                                              
+      47 +            $wakeSchedule->claims()->exists(),                 
+      48 +            422,                                               
+      49 +            'A claim has already been filed for this schedule.'
+      50 +        );                                                     
+      51 +                                                               
+      52 +        InsuranceClaim::create([                               
+      53 +            'schedule_id' => $wakeSchedule->id,                
+      54 +            'subscription_id' => $subscription->id,            
+      55 +            'status' => 'filed',                               
+      56 +            'filed_at' => now(),                               
+      57 +        ]);                                                    
+      58 +                                                               
+      59 +        return redirect()->back();                             
+      60      }
+      61  }
+
+● Now create the review controller:
+
+● Bash(php artisan make:controller InsuranceClaimReviewController
+      --no-interaction)  ⎿     INFO  Controller [app/Http/Controllers/InsuranceClaimReviewControll
+     er.php] created successfully.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(app/Http/Controllers/InsuranceClaimReviewController.php)
+  ⎿  Added 45 lines, removed 1 line
+       2  
+       3  namespace App\Http\Controllers;
+       4  
+       5 +use App\Models\InsuranceClaim;                                 
+       6  use Illuminate\Http\Request;
+       7  
+       8  class InsuranceClaimReviewController extends Controller
+       9  {
+       9 -    //                                                         
+      10 +    public function index(): \Inertia\Response                 
+      11 +    {                                                          
+      12 +        $claims = InsuranceClaim::with([                       
+      13 +            'subscription.member.user',                        
+      14 +            'subscription.insurance',                          
+      15 +            'schedule.deceased.beneficiary',                   
+      16 +            'reviewer',                                        
+      17 +        ])->latest()->get();                                   
+      18 +                                                               
+      19 +        return inertia()->render('admin/claims/index', [       
+      20 +            'claims' => $claims,                               
+      21 +        ]);                                                    
+      22 +    }                                                          
+      23 +                                                               
+      24 +    public function approve(Request $request, InsuranceClaim $c
+         +laim): \Illuminate\Http\RedirectResponse                       
+      25 +    {                                                          
+      26 +        abort_if($claim->status !== 'filed', 422, 'Only filed c
+         +laims can be approved.');                                      
+      27 +                                                               
+      28 +        $validated = $request->validate([                      
+      29 +            'approved_amount' => ['required', 'numeric', 'min:0
+         +'],                                                            
+      30 +        ]);                                                    
+      31 +                                                               
+      32 +        $claim->update([                                       
+      33 +            'status' => 'approved',                            
+      34 +            'reviewer_id' => $request->user()->id,             
+      35 +            'reviewed_at' => now(),                            
+      36 +            'approved_amount' => $validated['approved_amount'],
+      37 +        ]);                                                    
+      38 +                                                               
+      39 +        return redirect()->route('claims.review.index');       
+      40 +    }                                                          
+      41 +                                                               
+      42 +    public function reject(Request $request, InsuranceClaim $cl
+         +aim): \Illuminate\Http\RedirectResponse                        
+      43 +    {                                                          
+      44 +        abort_if($claim->status !== 'filed', 422, 'Only filed c
+         +laims can be rejected.');                                      
+      45 +                                                               
+      46 +        $claim->update([                                       
+      47 +            'status' => 'rejected',                            
+      48 +            'reviewer_id' => $request->user()->id,             
+      49 +            'reviewed_at' => now(),                            
+      50 +        ]);                                                    
+      51 +                                                               
+      52 +        return redirect()->route('claims.review.index');       
+      53 +    }                                                          
+      54  }
+
+● Now add the routes:
+
+● Update(routes/web.php)
+  ⎿  Added 1 line
+      111      Route::get('/wake-schedules', [App\Http\Controllers\Member
+           WakeScheduleController::class, 'index'])->name('wake-schedules
+           .index');
+      112      Route::post('/wake-schedules/{wakeSchedule}/orders', [App\
+           Http\Controllers\MemberWakeScheduleController::class, 'storeOr
+           der'])->name('wake-schedules.orders.store');
+      113      Route::post('/wake-schedules/{wakeSchedule}/reserve-plot',
+            [App\Http\Controllers\MemberWakeScheduleController::class, 'r
+           eservePlot'])->name('wake-schedules.reserve-plot');
+      114 +    Route::post('/wake-schedules/{wakeSchedule}/claim', [App\H
+          +ttp\Controllers\InsuranceClaimController::class, 'store'])->na
+          +me('wake-schedules.claim.store');                             
+      115  });
+      116  
+      117  // Member obituary management
+
+● Update(routes/web.php)
+  ⎿  Added 7 lines
+      153      Route::post('{subscription}/reject', 'reject')->name('reje
+           ct');
+      154  });
+      155  
+      156 +// Admin / Staff - Insurance Claim Review                     
+      157 +Route::middleware(['auth', 'verified', 'role:admin,staff'])->n
+          +ame('claims.review.')->prefix('claims/review')->controller(App
+          +\Http\Controllers\InsuranceClaimReviewController::class)->grou
+          +p(function () {                                               
+      158 +    Route::get('/', 'index')->name('index');                  
+      159 +    Route::post('{claim}/approve', 'approve')->name('approve')
+          +;                                                             
+      160 +    Route::post('{claim}/reject', 'reject')->name('reject');  
+      161 +});                                                           
+      162 +                                                              
+      163  // Admin - Cemetery Management
+      164  Route::middleware(['auth', 'verified', 'role:admin,staff'])->g
+           roup(function () {
+      165      Route::resource('cemetery-sections', App\Http\Controllers\
+           CemeterySectionController::class)->except(['show', 'create', '
+           edit']);
+
+● Now run pint and generate Wayfinder routes:
+
+● Bash(vendor/bin/pint --dirty --format agent 2>&1 | tail -5)
+  ⎿  {
+       "result": "pass"
+     }
+
+● Bash(php artisan wayfinder:generate --no-interaction 2>&1)
+  ⎿   [Wayfinder] Generated actions in /home/javos/Development/wake-cemeter
+     y/resources/js/actions
+     … +2 lines (ctrl+o to expand)
+
+  Read 2 files (ctrl+o to expand)
+
+● Wayfinder routes are generated. Now update MemberWakeScheduleController to
+  pass subscription, then mark task 2 done.
+
+● Update(app/Http/Controllers/MemberWakeScheduleController.php)
+  ⎿  Added 1 line, removed 1 line
+      21          abort_if(! $member, 403, 'Member profile required.');
+      22  
+      23          $schedules = WakeSchedule::with([
+      24 -            'deceased.beneficiary',                            
+      24 +            'deceased.beneficiary.subscription',               
+      25              'deceased.obituary',
+      26              'deceased.cemeteryPlot.section',
+      27              'room',
+
+● Update(app/Http/Controllers/MemberWakeScheduleController.php)
+  ⎿  Added 6 lines
+      43              'plots' => fn ($q) => $q->where('status', 'availabl
+          e')->orderBy('plot_number'),
+      44          ])->get()->filter(fn ($s) => $s->plots->isNotEmpty())->
+          values();
+      45  
+      46 +        $subscription = $member->load('subscription.insurance')
+         +->subscription;                                                
+      47 +                                                               
+      48          return inertia()->render('members/wake-schedules/index'
+          , [
+      49              'schedules' => $schedules,
+      50              'inventoryItems' => $inventoryItems,
+      51              'availableSections' => $availableSections,
+      52 +            'memberSubscription' => $subscription ? [          
+      53 +                'id' => $subscription->id,                     
+      54 +                'status' => $subscription->status,             
+      55 +            ] : null,                                          
+      56          ]);
+      57      }
+      58  
+
+● Bash(vendor/bin/pint --dirty --format agent 2>&1 | tail -3)
+  ⎿  {
+       "result": "pass"
+     }
+
+● Now fix the TypeScript types and update the member wake schedules page:
+
+● Update(resources/js/types/wake.ts)
+  ⎿  Added 1 line, removed 1 line
+      86      schedule_id?: number;
+      87      reviewer_id?: number;
+      88      approved_amount?: number;
+      89 -    status: 'pending' | 'approved' | 'rejected';               
+      89 +    status: 'filed' | 'approved' | 'rejected' | 'paid';        
+      90      filed_at: string;
+      91      reviewed_at?: string;
+      92      created_at: string;
+
+● Now update the member wake schedules page to add the claim button. I need to
+  update the Props interface, add the claim logic, and add a button in the
+  drawer:
+
+● Update(resources/js/pages/members/wake-schedules/index.tsx)
+  ⎿  Added 2 lines, removed 1 line
+      22  import OrderItemsDialog from '@/components/wake/member/order-it
+          ems-dialog';
+      23  import ReservePlotDialog from '@/components/wake/member/reserve
+          -plot-dialog';
+      24  import { Calendar, Package, ShoppingCart, ShieldCheck, Users, B
+          ookHeart, QrCode, ExternalLink, Copy, Check, MapPin } from 'luc
+          ide-react';
+      25 -import { Link } from '@inertiajs/react';                       
+      25 +import { Link, router } from '@inertiajs/react';               
+      26 +import * as claimRoutes from '@/routes/members/wake-schedules/c
+         +laim/index';                                                   
+      27  import { QRCodeSVG } from 'qrcode.react';
+      28  import type { WakeSchedule, InventoryItem } from '@/types/wake'
+          ;
+      29  
+
+● Update(resources/js/pages/members/wake-schedules/index.tsx)
+  ⎿  Added 6 lines
+      40      plots: AvailablePlot[];
+      41  }
+      42  
+      43 +interface MemberSubscription {                                 
+      44 +    id: number;                                                
+      45 +    status: string;                                            
+      46 +}                                                              
+      47 +                                                               
+      48  interface Props {
+      49      schedules: WakeSchedule[];
+      50      inventoryItems: InventoryItem[];
+      51      availableSections: SectionWithPlots[];
+      52 +    memberSubscription: MemberSubscription | null;             
+      53  }
+      54  
+      55  const statusColors: Record<string, string> = {
+
+● Update(resources/js/pages/members/wake-schedules/index.tsx)
+  ⎿  Added 2 lines, removed 1 line
+      69  };
+      70  
+      71  const claimStatusColors: Record<string, string> = {
+      72 -    pending: 'bg-yellow-500/10 text-yellow-700',               
+      72 +    filed: 'bg-blue-500/10 text-blue-700',                     
+      73      approved: 'bg-green-500/10 text-green-700',
+      74      rejected: 'bg-red-500/10 text-red-700',
+      75 +    paid: 'bg-emerald-500/10 text-emerald-700',                
+      76  };
+      77  
+      78  function getDeceasedName(schedule: WakeSchedule): string {
+
+● Update(resources/js/pages/members/wake-schedules/index.tsx)
+  ⎿  Added 2 lines, removed 1 line
+       90      );
+       91  }
+       92  
+       93 -export default function MemberWakeSchedulesIndex({ schedules, 
+          -inventoryItems, availableSections }: Props) {                 
+       93 +export default function MemberWakeSchedulesIndex({ schedules, 
+          +inventoryItems, availableSections, memberSubscription }: Props
+          +) {                                                           
+       94      const [selected, setSelected] = useState<WakeSchedule | nu
+           ll>(null);
+       95      const [orderOpen, setOrderOpen] = useState(false);
+       96      const [reservePlotOpen, setReservePlotOpen] = useState(fal
+           se);
+       97      const [qrOpen, setQrOpen] = useState(false);
+       98      const [copied, setCopied] = useState(false);
+       99 +    const [filingClaim, setFilingClaim] = useState(false);    
+      100  
+      101      const tributeUrl = selected?.deceased.obituary
+      102          ? `${window.location.origin}/tribute/${selected.deceas
+           ed.obituary.tribute_token}`
+
+● Update(resources/js/pages/members/wake-schedules/index.tsx)  ⎿  Added 19 lines
+      119  
+      120      const hasReservedPlot = selected ? !!selected.deceased.cem
+           etery_plot : false;
+      121  
+      122 +    const canFileClaim = selected                             
+      123 +        ? memberSubscription?.status === 'approved' &&        
+      124 +          !!selected.deceased.beneficiary &&                  
+      125 +          ['confirmed', 'in_progress', 'completed'].includes(s
+          +elected.status) &&                                            
+      126 +          !selected.claims                                    
+      127 +        : false;                                              
+      128 +                                                              
+      129 +    const handleFileClaim = () => {                           
+      130 +        if (!selected) return;                                
+      131 +        setFilingClaim(true);                                 
+      132 +        router.post(                                          
+      133 +            claimRoutes.store(selected).url,                  
+      134 +            {},                                               
+      135 +            {                                                 
+      136 +                onFinish: () => setFilingClaim(false),        
+      137 +            },                                                
+      138 +        );                                                    
+      139 +    };                                                        
+      140 +                                                              
+      141      return (
+      142          <MemberLayout title="Wake Schedules">
+      143              <div className="mb-8">
+
+● Now add the claim status display update (fix label) and the file claim button
+  in the drawer footer:
+
+● Update(resources/js/pages/members/wake-schedules/index.tsx)
+  ⎿  Added 7 lines, removed 1 line
+      377                                                  <div className
+           ="space-y-1.5">
+      378                                                      <div class
+           Name="flex justify-between text-sm">
+      379                                                          <span 
+           className="text-muted-foreground">Status</span>
+      380 -                                                        <span 
+          -className={`text-xs px-2 py-0.5 rounded-full font-medium ${cla
+          -imStatusColors[selected.claims.status] ?? ''}`}>              
+      380 +                                                        <span 
+          +className={`text-xs px-2 py-0.5 rounded-full font-medium capit
+          +alize ${claimStatusColors[selected.claims.status] ?? ''}`}>   
+      381                                                              {s
+           elected.claims.status}
+      382                                                          </span
+           >
+      383                                                      </div>
+      384 +                                                    {selected.
+          +claims.filed_at && (                                          
+      385 +                                                        <InfoR
+          +ow                                                            
+      386 +                                                            la
+          +bel="Filed"                                                   
+      387 +                                                            va
+          +lue={format(new Date(selected.claims.filed_at), 'MMM d, yyyy')
+          +}                                                             
+      388 +                                                        />    
+      389 +                                                    )}        
+      390                                                      {selected.
+           claims.approved_amount && (
+      391                                                          <InfoR
+           ow
+      392                                                              la
+           bel="Approved Amount"
+
+● Now add the file claim button in the drawer footer (after the reserve plot
+  button area):
+
+● Update(resources/js/pages/members/wake-schedules/index.tsx)
+  ⎿  Added 17 lines
+      508                                          Item ordering is avail
+           able once the schedule is confirmed.
+      509                                      </p>
+      510                                  )}
+      511 +                                                              
+      512 +                                {canFileClaim && (            
+      513 +                                    <Button                   
+      514 +                                        variant="outline"     
+      515 +                                        className="w-full bord
+          +er-blue-500/40 bg-blue-500/5 text-blue-700 hover:bg-blue-500/1
+          +0 hover:text-blue-700"                                        
+      516 +                                        onClick={handleFileCla
+          +im}                                                           
+      517 +                                        disabled={filingClaim}
+      518 +                                    >                         
+      519 +                                        <ShieldCheck className
+          +="h-4 w-4 mr-2" />                                            
+      520 +                                        {filingClaim ? 'Filing
+          + Claim...' : 'File Insurance Claim'}                          
+      521 +                                    </Button>                 
+      522 +                                )}                            
+      523 +                                {selected.claims?.status === '
+          +filed' && (                                                   
+      524 +                                    <p className="text-xs text
+          +-muted-foreground text-center">                               
+      525 +                                        Your insurance claim i
+          +s under review.                                               
+      526 +                                    </p>                      
+      527 +                                )}                            
+      528                              </div>
+      529                          </>
+      530                      )}
+
+● Now create the admin claims review page. First check the directory:
+
+  Read 1 file (ctrl+o to expand)
+
+● Bash(mkdir -p
+      /home/javos/Development/wake-cemetery/resources/js/pages/admin/claims)
+  ⎿  Done
+
+● Write(resources/js/pages/admin/claims/index.tsx)
+  ⎿  Wrote 418 lines to resources/js/pages/admin/claims/index.tsx
+       1 import { Head, router } from '@inertiajs/react';
+       2 import { useState, useMemo } from 'react';
+       3 import AppLayout from '@/layouts/app-layout';
+       4 import { Badge } from '@/components/ui/badge';
+       5 import { Button } from '@/components/ui/button';
+       6 import { Input } from '@/components/ui/input';
+       7 import { Label } from '@/components/ui/label';
+       8 import {
+       9     Dialog,
+      10     DialogContent,
+     … +408 lines (ctrl+o to expand)
+
+● Now complete the factory and write tests:
+
+  Read 7 files (ctrl+o to expand)
+
+● Now complete both factories and write the tests:
+
+● Update(database/factories/WakeScheduleFactory.php)
+  ⎿  Added 12 lines, removed 1 line
+       2  
+       3  namespace Database\Factories;
+       4  
+       5 +use App\Models\Deceased;                                       
+       6 +use App\Models\User;                                           
+       7 +use App\Models\WakePackage;                                    
+       8 +use App\Models\WakeRoom;                                       
+       9  use Illuminate\Database\Eloquent\Factories\Factory;
+      10  
+      11  /**
+     ...
+      21      public function definition(): array
+      22      {
+      23          return [
+      20 -            //                                                 
+      24 +            'deceased_id' => Deceased::factory(),              
+      25 +            'room_id' => WakeRoom::factory(),                  
+      26 +            'package_id' => WakePackage::factory(),            
+      27 +            'date_start' => now()->subDays(3)->toDateString(), 
+      28 +            'date_end' => now()->toDateString(),               
+      29 +            'total_amount' => fake()->randomFloat(2, 10000, 100
+         +000),                                                          
+      30 +            'status' => 'confirmed',                           
+      31 +            'created_by' => User::factory(),                   
+      32          ];
+      33      }
+      34  }
+
+● Update(database/factories/InsuranceClaimFactory.php)
+  ⎿  Added 6 lines, removed 1 line
+      2  
+      3  namespace Database\Factories;
+      4  
+      5 +use App\Models\Subscription;                                    
+      6 +use App\Models\WakeSchedule;                                    
+      7  use Illuminate\Database\Eloquent\Factories\Factory;
+      8  
+      9  /**
+     ...
+      19      public function definition(): array
+      20      {
+      21          return [
+      20 -            //                                                 
+      22 +            'schedule_id' => WakeSchedule::factory(),          
+      23 +            'subscription_id' => Subscription::factory(),      
+      24 +            'status' => 'filed',                               
+      25 +            'filed_at' => now(),                               
+      26          ];
+      27      }
+      28  }
+
+● Now create the tests:
+
+● Bash(php artisan make:test --pest InsuranceClaimTest --no-interaction && php
+      artisan make:test --pest InsuranceClaimReviewTest --no-interaction)
+  ⎿     INFO  Test [tests/Feature/InsuranceClaimTest.php] created successfu
+     lly.
+     … +3 lines (ctrl+o to expand)
+
+● Write(tests/Feature/InsuranceClaimTest.php)
+  ⎿  Error writing file
+
+  Read 2 files (ctrl+o to expand)
+
+● Write(tests/Feature/InsuranceClaimTest.php)
+  ⎿  Added 122 lines, removed 3 lines
+        1  <?php
+        2  
+        3 -test('example', function () {                                 
+        4 -    $response = $this->get('/');                              
+        3 +use App\Models\Beneficiary;                                   
+        4 +use App\Models\Deceased;                                      
+        5 +use App\Models\Insurance;                                     
+        6 +use App\Models\InsuranceClaim;                                
+        7 +use App\Models\Member;                                        
+        8 +use App\Models\Subscription;                                  
+        9 +use App\Models\User;                                          
+       10 +use App\Models\WakePackage;                                   
+       11 +use App\Models\WakeRoom;                                      
+       12 +use App\Models\WakeSchedule;                                  
+       13 +use Illuminate\Foundation\Testing\RefreshDatabase;            
+       14  
+        6 -    $response->assertStatus(200);                             
+       15 +uses(RefreshDatabase::class);                                 
+       16 +                                                              
+       17 +/**                                                           
+       18 + * Helper: build the full chain for a member with an approved 
+          +subscription                                                  
+       19 + * and a confirmed wake schedule for one of their beneficiarie
+          +s.                                                            
+       20 + *                                                            
+       21 + * @return array{user: User, member: Member, subscription: Sub
+          +scription, beneficiary: Beneficiary, schedule: WakeSchedule}  
+       22 + */                                                           
+       23 +function makeClaimableSchedule(): array                       
+       24 +{                                                             
+       25 +    $user = User::factory()->create(['role' => 'member']);    
+       26 +    $member = Member::factory()->create(['user_id' => $user->i
+          +d]);                                                          
+       27 +    $insurance = Insurance::factory()->create();              
+       28 +    $subscription = Subscription::factory()->create([         
+       29 +        'member_id' => $member->id,                           
+       30 +        'insurance_id' => $insurance->id,                     
+       31 +        'status' => 'approved',                               
+       32 +    ]);                                                       
+       33 +    $beneficiary = Beneficiary::factory()->create(['subscripti
+          +on_id' => $subscription->id]);                                
+       34 +    $deceased = Deceased::factory()->create([                 
+       35 +        'member_id' => $member->id,                           
+       36 +        'beneficiary_id' => $beneficiary->id,                 
+       37 +    ]);                                                       
+       38 +    $schedule = WakeSchedule::create([                        
+       39 +        'deceased_id' => $deceased->id,                       
+       40 +        'room_id' => WakeRoom::factory()->create()->id,       
+       41 +        'package_id' => WakePackage::factory()->create()->id, 
+       42 +        'date_start' => now()->subDays(3)->toDateString(),    
+       43 +        'date_end' => now()->toDateString(),                  
+       44 +        'total_amount' => 50000,                              
+       45 +        'status' => 'confirmed',                              
+       46 +        'created_by' => User::factory()->create()->id,        
+       47 +    ]);                                                       
+       48 +                                                              
+       49 +    return compact('user', 'member', 'subscription', 'benefici
+          +ary', 'schedule');                                            
+       50 +}                                                             
+       51 +                                                              
+       52 +it('allows a member with an approved subscription to file a cl
+          +aim', function () {                                           
+       53 +    ['user' => $user, 'subscription' => $subscription, 'schedu
+          +le' => $schedule] = makeClaimableSchedule();                  
+       54 +                                                              
+       55 +    $this->actingAs($user)                                    
+       56 +        ->post("/member/wake-schedules/{$schedule->id}/claim")
+       57 +        ->assertRedirect();                                   
+       58 +                                                              
+       59 +    $claim = InsuranceClaim::where('schedule_id', $schedule->i
+          +d)->first();                                                  
+       60 +    expect($claim)->not->toBeNull()                           
+       61 +        ->and($claim->status)->toBe('filed')                  
+       62 +        ->and($claim->subscription_id)->toBe($subscription->id
+          +)                                                             
+       63 +        ->and($claim->filed_at)->not->toBeNull();             
+       64  });
+       65 +                                                              
+       66 +it('rejects a claim if the member has no approved subscription
+          +', function () {                                              
+       67 +    ['user' => $user, 'schedule' => $schedule, 'subscription' 
+          +=> $subscription] = makeClaimableSchedule();                  
+       68 +    $subscription->update(['status' => 'pending']);           
+       69 +                                                              
+       70 +    $this->actingAs($user)                                    
+       71 +        ->post("/member/wake-schedules/{$schedule->id}/claim")
+       72 +        ->assertForbidden();                                  
+       73 +});                                                           
+       74 +                                                              
+       75 +it('rejects a claim if the deceased is not a beneficiary', fun
+          +ction () {                                                    
+       76 +    $user = User::factory()->create(['role' => 'member']);    
+       77 +    $member = Member::factory()->create(['user_id' => $user->i
+          +d]);                                                          
+       78 +    Subscription::factory()->create(['member_id' => $member->i
+          +d, 'status' => 'approved']);                                  
+       79 +                                                              
+       80 +    $deceased = Deceased::factory()->create(['member_id' => $m
+          +ember->id, 'beneficiary_id' => null]);                        
+       81 +    $schedule = WakeSchedule::create([                        
+       82 +        'deceased_id' => $deceased->id,                       
+       83 +        'room_id' => WakeRoom::factory()->create()->id,       
+       84 +        'package_id' => WakePackage::factory()->create()->id, 
+       85 +        'date_start' => now()->subDays(3)->toDateString(),    
+       86 +        'date_end' => now()->toDateString(),                  
+       87 +        'total_amount' => 50000,                              
+       88 +        'status' => 'confirmed',                              
+       89 +        'created_by' => $user->id,                            
+       90 +    ]);                                                       
+       91 +                                                              
+       92 +    $this->actingAs($user)                                    
+       93 +        ->post("/member/wake-schedules/{$schedule->id}/claim")
+       94 +        ->assertStatus(422);                                  
+       95 +});                                                           
+       96 +                                                              
+       97 +it('rejects a duplicate claim for the same schedule', function
+          + () {                                                         
+       98 +    ['user' => $user, 'subscription' => $subscription, 'schedu
+          +le' => $schedule] = makeClaimableSchedule();                  
+       99 +                                                              
+      100 +    InsuranceClaim::create([                                  
+      101 +        'schedule_id' => $schedule->id,                       
+      102 +        'subscription_id' => $subscription->id,               
+      103 +        'status' => 'filed',                                  
+      104 +        'filed_at' => now(),                                  
+      105 +    ]);                                                       
+      106 +                                                              
+      107 +    $this->actingAs($user)                                    
+      108 +        ->post("/member/wake-schedules/{$schedule->id}/claim")
+      109 +        ->assertStatus(422);                                  
+      110 +});                                                           
+      111 +                                                              
+      112 +it('rejects a claim for a schedule in a non-claimable status',
+          + function () {                                                
+      113 +    ['user' => $user, 'schedule' => $schedule] = makeClaimable
+          +Schedule();                                                   
+      114 +    $schedule->update(['status' => 'pending']);               
+      115 +                                                              
+      116 +    $this->actingAs($user)                                    
+      117 +        ->post("/member/wake-schedules/{$schedule->id}/claim")
+      118 +        ->assertStatus(422);                                  
+      119 +});                                                           
+      120 +                                                              
+      121 +it('denies guests from filing a claim', function () {         
+      122 +    $schedule = WakeSchedule::factory()->create();            
+      123 +                                                              
+      124 +    $this->post("/member/wake-schedules/{$schedule->id}/claim"
+          +)                                                             
+      125 +        ->assertRedirect('/login');                           
+      126 +});                                                           
+
+● Write(tests/Feature/InsuranceClaimReviewTest.php)  ⎿  Added 75 lines, removed 3 lines
+       1  <?php
+       2  
+       3 -test('example', function () {                                  
+       4 -    $response = $this->get('/');                               
+       3 +use App\Models\InsuranceClaim;                                 
+       4 +use App\Models\User;                                           
+       5 +use Illuminate\Foundation\Testing\RefreshDatabase;             
+       6  
+       6 -    $response->assertStatus(200);                              
+       7 +uses(RefreshDatabase::class);                                  
+       8 +                                                               
+       9 +beforeEach(function () {                                       
+      10 +    $this->admin = User::factory()->create(['role' => 'admin'])
+         +;                                                              
+      11 +    $this->staff = User::factory()->create(['role' => 'staff'])
+         +;                                                              
+      12 +    $this->claim = InsuranceClaim::factory()->create(['status' 
+         +=> 'filed']);                                                  
+      13  });
+      14 +                                                               
+      15 +it('allows admin to view the claims review page', function () {
+      16 +    $this->actingAs($this->admin)                              
+      17 +        ->get('/claims/review')                                
+      18 +        ->assertOk()                                           
+      19 +        ->assertInertia(fn ($page) => $page->component('admin/c
+         +laims/index'));                                                
+      20 +});                                                            
+      21 +                                                               
+      22 +it('allows staff to view the claims review page', function () {
+      23 +    $this->actingAs($this->staff)                              
+      24 +        ->get('/claims/review')                                
+      25 +        ->assertOk();                                          
+      26 +});                                                            
+      27 +                                                               
+      28 +it('prevents members from viewing the claims review page', func
+         +tion () {                                                      
+      29 +    $member = User::factory()->create(['role' => 'member']);   
+      30 +                                                               
+      31 +    $this->actingAs($member)                                   
+      32 +        ->get('/claims/review')                                
+      33 +        ->assertForbidden();                                   
+      34 +});                                                            
+      35 +                                                               
+      36 +it('allows admin to approve a filed claim with an amount', func
+         +tion () {                                                      
+      37 +    $this->actingAs($this->admin)                              
+      38 +        ->post("/claims/review/{$this->claim->id}/approve", ['a
+         +pproved_amount' => 25000])                                     
+      39 +        ->assertRedirect('/claims/review');                    
+      40 +                                                               
+      41 +    $this->claim->refresh();                                   
+      42 +    expect($this->claim->status)->toBe('approved')             
+      43 +        ->and($this->claim->approved_amount)->toBe('25000.00') 
+      44 +        ->and($this->claim->reviewer_id)->toBe($this->admin->id
+         +)                                                              
+      45 +        ->and($this->claim->reviewed_at)->not->toBeNull();     
+      46 +});                                                            
+      47 +                                                               
+      48 +it('requires an amount when approving a claim', function () {  
+      49 +    $this->actingAs($this->admin)                              
+      50 +        ->post("/claims/review/{$this->claim->id}/approve", [])
+      51 +        ->assertInvalid(['approved_amount']);                  
+      52 +});                                                            
+      53 +                                                               
+      54 +it('allows admin to reject a filed claim', function () {       
+      55 +    $this->actingAs($this->admin)                              
+      56 +        ->post("/claims/review/{$this->claim->id}/reject")     
+      57 +        ->assertRedirect('/claims/review');                    
+      58 +                                                               
+      59 +    $this->claim->refresh();                                   
+      60 +    expect($this->claim->status)->toBe('rejected')             
+      61 +        ->and($this->claim->reviewer_id)->toBe($this->admin->id
+         +)                                                              
+      62 +        ->and($this->claim->reviewed_at)->not->toBeNull();     
+      63 +});                                                            
+      64 +                                                               
+      65 +it('cannot approve a claim that is not filed', function () {   
+      66 +    $this->claim->update(['status' => 'approved', 'approved_amo
+         +unt' => 10000, 'reviewer_id' => $this->admin->id, 'reviewed_at'
+         + => now()]);                                                   
+      67 +                                                               
+      68 +    $this->actingAs($this->admin)                              
+      69 +        ->post("/claims/review/{$this->claim->id}/approve", ['a
+         +pproved_amount' => 5000])                                      
+      70 +        ->assertStatus(422);                                   
+      71 +});                                                            
+      72 +                                                               
+      73 +it('cannot reject a claim that is not filed', function () {    
+      74 +    $this->claim->update(['status' => 'rejected', 'reviewer_id'
+         + => $this->admin->id, 'reviewed_at' => now()]);                
+      75 +                                                               
+      76 +    $this->actingAs($this->admin)                              
+      77 +        ->post("/claims/review/{$this->claim->id}/reject")     
+      78 +        ->assertStatus(422);                                   
+      79 +});                                                            
+
+● Now run Pint and then the tests:
+
+● Bash(vendor/bin/pint --dirty --format agent 2>&1 | tail -3)
+  ⎿  {
+       "result": "pass"
+     }
+
+● Bash(php artisan test --compact tests/Feature/InsuranceClaimTest.php
+      tests/Feature/InsuranceClaimReviewTest.php 2>&1)
+  ⎿  Error: Exit code 2
+
+       ..⨯...........
+       ─────────────────────────────────────────────────────────────────────────
+     ───  
+        FAILED  Tests\Feature\InsuranceClaimTest > it rejects a c…  
+     QueryException   
+       SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint 
+     failed: deceaseds.beneficiary_id (Connection: sqlite, Database: :memory:, 
+     SQL: insert into "deceaseds" ("member_id", "beneficiary_id", 
+     "date_of_death", "cause_of_death", "updated_at", "created_at") values (1, 
+     ?, 2022-04-14 13:21:01, Tempore autem voluptatem tempora., 2026-04-23 
+     11:32:52, 2026-04-23 11:32:52))
+
+       at vendor/laravel/framework/src/Illuminate/Database/Connection.php:584
+         580▕             $this->bindValues($statement, 
+     $this->prepareBindings($bindings));
+         581▕ 
+     … +14 lines (ctrl+o to see all)
+
+● laravel-boost - database-schema (MCP)(filter: "deceaseds",
+                                       include_column_details: true)
+  ⎿  {
+       "engine": "sqlite",
+       "tables": {
+     … +32 lines (ctrl+o to expand)
+
+● beneficiary_id is NOT NULL in the schema — my test used the wrong setup. Fix
+  the test to check the actual constraint (beneficiary from a different
+  subscription):
+
+● Update(tests/Feature/InsuranceClaimTest.php)
+  ⎿  Added 9 lines, removed 3 lines
+      72          ->assertForbidden();
+      73  });
+      74  
+      75 -it('rejects a claim if the deceased is not a beneficiary', func
+         -tion () {                                                      
+      75 +it('rejects a claim if the deceased beneficiary belongs to a di
+         +fferent subscription', function () {                           
+      76      $user = User::factory()->create(['role' => 'member']);
+      77      $member = Member::factory()->create(['user_id' => $user->id
+          ]);
+      78      Subscription::factory()->create(['member_id' => $member->id
+          , 'status' => 'approved']);
+      79  
+      80 -    $deceased = Deceased::factory()->create(['member_id' => $me
+         -mber->id, 'beneficiary_id' => null]);                          
+      80 +    // Create a deceased whose beneficiary belongs to a DIFFERE
+         +NT subscription                                                
+      81 +    $otherSubscription = Subscription::factory()->create();    
+      82 +    $otherBeneficiary = Beneficiary::factory()->create(['subscr
+         +iption_id' => $otherSubscription->id]);                        
+      83 +    $deceased = Deceased::factory()->create([                  
+      84 +        'member_id' => $member->id,                            
+      85 +        'beneficiary_id' => $otherBeneficiary->id,             
+      86 +    ]);                                                        
+      87      $schedule = WakeSchedule::create([
+      88          'deceased_id' => $deceased->id,
+      89          'room_id' => WakeRoom::factory()->create()->id,
+     ...
+       97  
+       98      $this->actingAs($user)
+       99          ->post("/member/wake-schedules/{$schedule->id}/claim")
+       94 -        ->assertStatus(422);                                  
+      100 +        ->assertForbidden();                                  
+      101  });
+      102  
+      103  it('rejects a duplicate claim for the same schedule', function
+            () {
+
+● Also remove the now-unnecessary import of Deceased since makeClaimableSchedule
+   uses factory defaults, and update the controller to remove the beneficiary_id
+   null check since the DB enforces it:
+
+● Update(app/Http/Controllers/InsuranceClaimController.php)
+  ⎿  Added 1 line, removed 6 lines
+      26          );
+      27  
+      28          abort_if(
+      29 -            ! $wakeSchedule->deceased->beneficiary_id,         
+      30 -            422,                                               
+      31 -            'Claims can only be filed for a covered beneficiary
+         -, not for the member themselves.'                              
+      32 -        );                                                     
+      33 -                                                               
+      34 -        abort_if(                                              
+      29 +            ! $wakeSchedule->deceased->beneficiary_id ||       
+      30              $wakeSchedule->deceased->beneficiary->subscription_
+          id !== $subscription->id,
+      31              403,
+      32              'This beneficiary does not belong to your subscript
+          ion.'
+
+● Bash(php artisan test --compact tests/Feature/InsuranceClaimTest.php
+      tests/Feature/InsuranceClaimReviewTest.php 2>&1)
+  ⎿    ..............
+
+       Tests:    14 passed (38 assertions)
+       Duration: 2.08s
+
+● All 14 tests pass. Final format pass:
+
+● Bash(vendor/bin/pint --dirty --format agent 2>&1 | tail -3)
+  ⎿  {
+       "result": "pass"
+     }
+
+● All 14 tests pass. Here's what was implemented:
+
+  Migration
+  - Made reviewer_id, approved_amount, and reviewed_at nullable in
+  insurance_claims — they're only set when a claim is reviewed.
+
+  Backend
+  - InsuranceClaim model — added fillable and casts
+  - InsuranceClaimController::store() — members file a claim for a wake
+  schedule, with guards: must have an approved subscription, beneficiary must
+  belong to their subscription, schedule must be
+  confirmed/in-progress/completed, no duplicate claims
+  - InsuranceClaimReviewController — admin/staff index, approve (requires
+  amount), reject
+  - Routes: POST /member/wake-schedules/{wakeSchedule}/claim and GET/POST 
+  /claims/review/{claim}/approve|reject
+
+  Frontend
+  - Member wake schedules page — "File Insurance Claim" button appears when
+  eligible (approved subscription + deceased is a covered beneficiary + no
+  existing claim). Shows claim status with filed_at date.
+  - Admin admin/claims/index.tsx — table with search/filter, view details
+  dialog, approve (with amount input) and reject dialogs
+
+  Tests — 14 tests covering all key scenarios for both filing and review.
+
+  ▎ If the claim button doesn't appear in the UI yet, run npm run dev or npm run
+   build to pick up the new Wayfinder routes.
+
+✻ Baked for 11m 17s
+
+❯ /status 
+  ⎿  Status dialog dismissed
+
+❯ where to view the insurance claims, and the remaining balances of each member 
+ with their subsrciptions?                                                      
+
+  Searched for 3 patterns, read 6 files (ctrl+o to expand)
+
+● Two things to address:
+
+  1. Insurance Claims — the page exists at /claims/review but there's no sidebar
+   link yet. I'll add it.
+  2. Remaining balances / premium schedules — the premium_schedules table and
+  PremiumSchedule model exist but nothing is built on top of them. That feature
+  is not yet implemented.
+
+  Let me add the claims link to the sidebar now:
+
+● Update(resources/js/components/app-sidebar.tsx)
+  ⎿  Added 1 line
+      17  import { dashboard } from '@/routes';
+      18  import * as staffRoutes from '@/routes/staff';
+      19  import * as subscriptionReviewRoutes from '@/routes/subscriptio
+          ns/review/index';
+      20 +import * as claimReviewRoutes from '@/routes/claims/review/inde
+         +x';                                                            
+      21  
+      22  const mainNavItems: NavItem[] = [
+      23      {
+
+● Update(resources/js/components/app-sidebar.tsx)
+  ⎿  Added 5 lines
+      79          icon: ShieldCheck,
+      80          href: subscriptionReviewRoutes.index().url,
+      81      },
+      82 +    {                                                          
+      83 +        title: 'Insurance Claims',                             
+      84 +        icon: ShieldCheck,                                     
+      85 +        href: claimReviewRoutes.index().url,                   
+      86 +    },                                                         
+      87  ];
+      88  
+      89  const footerNavItems: NavItem[] = [];
+
+● Done. To summarize:
+
+  Insurance Claims — /claims/review (admin/staff only). Now linked from the
+  sidebar under "Admin". Shows all filed claims with status filtering, and lets
+  you approve (with a payout amount) or reject each one.
+
+  Remaining balances / premium schedules — not yet built. The premium_schedules
+  table exists (with columns: due_date, due_amount, status: 
+  upcoming|paid|missed|late) and Subscription::schedules() points to it, but
+  there's no controller, route, or UI. Do you want me to build that out? It
+  would show each member's subscription with a breakdown of their payment
+  schedule and any outstanding/missed premiums.
+
+✻ Worked for 42s
+
+❯ let's do that                                                                 
+● Let me first understand what's there.
+
+  Read 4 files (ctrl+o to expand)
+  ⎿  You've hit your limit · resets 10:20pm (Asia/Manila)
+     /upgrade or /extra-usage to finish what you’re working on.

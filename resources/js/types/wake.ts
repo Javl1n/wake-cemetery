@@ -86,7 +86,7 @@ export interface InsuranceClaim {
     schedule_id?: number;
     reviewer_id?: number;
     approved_amount?: number;
-    status: 'pending' | 'approved' | 'rejected';
+    status: 'filed' | 'approved' | 'rejected' | 'paid';
     filed_at: string;
     reviewed_at?: string;
     created_at: string;
